@@ -251,18 +251,16 @@
         }
     });
 
-    const STORAGE_KEY = 'dompet_vzqaajoko_permanent_data';
+    const STORAGE_KEY = 'dompet_vzqaajoko_permanent_data_v3';
     const THEME_KEY = 'dompet_theme_mode';
     const LOGIN_KEY = 'dompet_is_logged_in';
-    const SYNC_CHANNEL = 'dompet_sync_channel_v1';
-    
-    const broadcastChannel = new BroadcastChannel(SYNC_CHANNEL);
 
     let appData = {
         saldo: 0,
         riwayat: []
     };
 
+    // Jalankan saat halaman pertama kali dibuka atau di-refresh
     window.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem(THEME_KEY);
         if (savedTheme === 'dark') {
@@ -355,7 +353,7 @@
             return;
         }
 
-        muatDataDariStorage();
+        muatDataDariStorage(); // Ambil data terbaru sebelum dihitung
 
         if (tipe === 'out' && nom > appData.saldo) {
             alert('Saldo tidak mencukupi!');
@@ -375,7 +373,7 @@
             tipe: tipe
         });
 
-        simpanDanBroadcast();
+        simpanData();
         
         document.getElementById('inputKeterangan').value = '';
         document.getElementById('inputNominal').value = '';
@@ -392,34 +390,18 @@
                 appData.saldo += item.nominal;
             }
             appData.riwayat.splice(index, 1);
-            simpanDanBroadcast();
+            simpanData();
         }
     }
 
-    function simpanDanBroadcast() {
-        const dataString = JSON.stringify(appData);
-        localStorage.setItem(STORAGE_KEY, dataString);
-        broadcastChannel.postMessage(appData);
+    function simpanData() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         updateUI();
     }
 
-    broadcastChannel.onmessage = function(event) {
-        if (event.data) {
-            appData = event.data;
-            updateUI();
-        }
-    };
-
-    window.addEventListener('storage', function(e) {
-        if (e.key === STORAGE_KEY && e.newValue) {
-            try {
-                appData = JSON.parse(e.newValue);
-                updateUI();
-            } catch (err) {}
-        }
-    });
-
     function updateUI() {
+        muatDataDariStorage(); // Pastikan selalu membaca data terbaru dari memori browser
+
         document.getElementById('displaySaldo').innerText = new Intl.NumberFormat('id-ID', {
             style: 'currency', currency: 'IDR', maximumFractionDigits: 0
         }).format(appData.saldo);
@@ -461,15 +443,7 @@
             return;
         }
 
-        // Ambil data riwayat secara kronologis (dari lama ke baru) untuk grafik
-        const dataReversed = [...appData.riwayat].reverse();
-        let points = [];
-        let runningSaldo = appData.saldo;
-
-        // Hitung ulang saldo bertahap untuk titik-titik grafik
-        let tempVals = [];
         let currentS = appData.saldo;
-        // Hitung mundur untuk merekonstruksi jejak saldo
         for(let i = appData.riwayat.length - 1; i >= 0; i--) {
             let tr = appData.riwayat[i];
             if(tr.tipe === 'in') currentS -= tr.nominal;
@@ -493,6 +467,7 @@
         let stepX = width / Math.max(valList.length - 1, 1);
 
         let ptsString = "";
+        let points = [];
         valList.forEach((val, idx) => {
             let cx = idx * stepX;
             let cy = height - ((val - minV) / rangeV) * height + 10;
@@ -500,7 +475,6 @@
             ptsString += `${cx},${cy} `;
         });
 
-        // Buat elemen garis SVG (Polyline)
         let polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
         polyline.setAttribute('points', ptsString);
         polyline.setAttribute('fill', 'none');
@@ -508,7 +482,6 @@
         polyline.setAttribute('stroke-width', '3');
         svg.appendChild(polyline);
 
-        // Buat titik-titik lingkaran pada garis
         points.forEach(pt => {
             let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             circle.setAttribute('cx', pt.x);
