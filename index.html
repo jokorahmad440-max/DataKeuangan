@@ -6,35 +6,25 @@
     <title>Dompet Digital Profesional</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --container-bg: #1e293b;
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-            --input-bg: #0f172a;
-            --input-border: #334155;
-            --history-border: #334155;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --success: #10b981;
-            --danger: #ef4444;
+            --bg-color: #f4f4f9;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --input-bg: #ffffff;
+            --input-border: #ccc;
+            --history-border: #eee;
         }
 
-        .light-mode {
-            --bg-color: #f1f5f9;
-            --container-bg: #ffffff;
-            --text-color: #0f172a;
-            --text-muted: #64748b;
-            --input-bg: #f8fafc;
-            --input-border: #cbd5e1;
-            --history-border: #e2e8f0;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --success: #059669;
-            --danger: #dc2626;
+        .dark-mode {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --input-bg: #2d2d2d;
+            --input-border: #444;
+            --history-border: #333;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -43,196 +33,140 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            transition: background 0.3s ease, color 0.3s ease;
+            transition: background 0.3s, color 0.3s;
             position: relative;
         }
 
-        /* Menu Tombol Versi di Kiri Luar */
+        /* Tombol Versi di Luar (Kiri Atas) */
         .external-version-menu {
             position: absolute;
             top: 40px;
             left: 40px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             z-index: 100;
         }
 
         .btn-external-version {
-            padding: 12px 24px;
+            padding: 10px 20px;
             font-size: 14px;
-            font-weight: 600;
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            font-weight: bold;
+            background-color: #007bff;
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 6px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             text-align: center;
-            opacity: 0.5;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .btn-external-version:hover {
-            opacity: 0.8;
-            transform: translateY(-2px);
+            opacity: 0.6;
+            transition: all 0.2s;
         }
 
         .btn-external-version.active {
             opacity: 1;
             transform: scale(1.05);
-            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
         }
 
-        /* Container Utama Dompet */
         .container {
             width: 100%;
-            max-width: 440px;
+            max-width: 420px;
             background: var(--container-bg);
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-            transition: background 0.3s ease, transform 0.3s ease;
-        }
-
-        h2 { 
-            text-align: center; 
-            margin-top: 0; 
-            font-size: 20px; 
-            letter-spacing: 0.5px;
-        }
-
-        .saldo-box {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
             padding: 20px;
-            border-radius: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: background 0.3s;
+        }
+        h2 { text-align: center; margin-top: 0; }
+        .saldo-box {
+            background: #007bff;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
             text-align: center;
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-            letter-spacing: 0.5px;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
         }
-
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 15px;
         }
-
-        label { 
-            display: block; 
-            margin-bottom: 6px; 
-            font-size: 13px; 
-            font-weight: 600; 
-            color: var(--text-muted);
-        }
-
+        label { display: block; margin-bottom: 5px; font-size: 14px; }
         input, select {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             box-sizing: border-box;
             border: 1px solid var(--input-border);
             background-color: var(--input-bg);
             color: var(--text-color);
-            border-radius: 8px;
+            border-radius: 4px;
             font-size: 14px;
-            transition: border-color 0.2s, box-shadow 0.2s;
         }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        button.btn-action {
+        button {
             width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #10b981, #059669);
+            padding: 10px;
+            background-color: #28a745;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
+            border-radius: 4px;
+            font-size: 16px;
             cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
-            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
         }
-
-        button.btn-action:hover { opacity: 0.95; transform: translateY(-1px); }
-        button.btn-action:active { transform: translateY(0); }
-
+        button:hover { opacity: 0.9; }
         .btn-secondary {
-            background-color: var(--input-border);
-            color: var(--text-color);
-            border: none;
-            border-radius: 6px;
-            padding: 6px 12px;
-            font-size: 12px;
-            cursor: pointer;
-            font-weight: 600;
+            background-color: #6c757d;
         }
-
         .btn-danger {
-            background-color: var(--danger);
-            color: white;
-            border: none;
-            padding: 6px 10px;
+            background-color: #dc3545;
+            padding: 4px 8px;
             font-size: 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
+            width: auto;
         }
-
         .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-size: 13px;
             border-bottom: 1px solid var(--history-border);
-            padding-bottom: 12px;
+            padding-bottom: 10px;
         }
-
         .history-list {
             margin-top: 20px;
-            max-height: 200px;
+            max-height: 180px;
             overflow-y: auto;
             border-top: 1px solid var(--history-border);
-            padding-top: 12px;
+            padding-top: 10px;
         }
-
         .history-item {
             font-size: 14px;
-            padding: 10px 4px;
+            padding: 8px 0;
             border-bottom: 1px solid var(--history-border);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
         .hidden { display: none !important; }
         
-        /* Kotak Grafik Estetik Versi 1 */
+        /* Kotak Grafik Fluktuasi Versi 1 */
         .chart-box {
-            background: rgba(59, 130, 246, 0.05);
-            border: 1px solid var(--input-border);
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+            background: rgba(0, 123, 255, 0.05);
+            border: 1px dashed #007bff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
             text-align: center;
         }
-
         svg.flame-chart {
             width: 100%;
-            height: 120px;
+            height: 100px;
             overflow: visible;
         }
     </style>
 </head>
 <body>
 
-    <!-- Menu Versi di Luar Kiri -->
+    <!-- Menu Versi 1 & 2 di Luar -->
     <div class="external-version-menu" id="externalMenu">
         <button id="btnVer1" class="btn-external-version active" onclick="pilihVersi(1)">Versi 1</button>
         <button id="btnVer2" class="btn-external-version" onclick="pilihVersi(2)">Versi 2</button>
@@ -242,7 +176,7 @@
     <!-- BAGIAN LOGIN -->
     <div id="loginSection">
         <h2>Login Dompet</h2>
-        <div class="form-group" style="margin-top: 20px;">
+        <div class="form-group">
             <label>Username</label>
             <input type="text" id="inputUser" placeholder="Masukkan username">
         </div>
@@ -250,16 +184,16 @@
             <label>PIN</label>
             <input type="password" id="inputPin" maxlength="4" placeholder="Masukkan PIN">
         </div>
-        <button class="btn-action" onclick="login()" style="margin-top: 10px;">Masuk</button>
+        <button onclick="login()">Masuk</button>
     </div>
 
     <!-- BAGIAN APLIKASI UTAMA -->
     <div id="appSection" class="hidden">
         <div class="top-bar">
-            <span>👤 <b>vzqaajoko</b></span>
-            <div style="display: flex; gap: 6px;">
-                <button onclick="toggleTheme()" class="btn-secondary">🌙/☀️ Tema</button>
-                <button onclick="logout()" class="btn-danger">Keluar</button>
+            <span><b>vzqaajoko</b></span>
+            <div>
+                <button onclick="toggleTheme()" class="btn-secondary" style="padding: 4px 8px; font-size: 12px; width: auto;">🌙/☀️ Tema</button>
+                <button onclick="logout()" class="btn-danger" style="padding: 4px 8px; font-size: 12px;">Keluar</button>
             </div>
         </div>
 
@@ -267,18 +201,18 @@
         
         <div class="saldo-box" id="displaySaldo">Rp 0</div>
 
-        <!-- TAMPILAN VERSI 1: GRAFIK FLUKTUASI -->
+        <!-- TAMPILAN VERSI 1: GRAFIK FLUKTUASI (TANPA MENU INPUT) -->
         <div id="versi1Content">
             <div class="chart-box">
-                <p style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600; color: var(--text-muted);">📈 Grafik Fluktuasi Keuangan</p>
+                <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold;">📈 Grafik Fluktuasi Keuangan</p>
                 <svg class="flame-chart" id="fluctuationSvg" viewBox="0 0 300 100">
-                    <!-- Digambar dinamis via JavaScript -->
+                    <!-- Garis fluktuasi digambar via JavaScript -->
                 </svg>
-                <p id="flunctuationText" style="margin: 10px 0 0 0; font-size: 12px; color: var(--text-muted);">Belum ada fluktuasi data</p>
+                <p id="flunctuationText" style="margin: 8px 0 0 0; font-size: 12px; color: #666;">Belum ada fluktuasi data</p>
             </div>
         </div>
 
-        <!-- TAMPILAN VERSI 2: MENU INPUT -->
+        <!-- TAMPILAN VERSI 2: MENU INPUT & RIWAYAT LENGKAP -->
         <div id="versi2Content" class="hidden">
             <div class="form-group">
                 <label>Keterangan</label>
@@ -295,13 +229,13 @@
                     <option value="out">Pengeluaran (-)</option>
                 </select>
             </div>
-            <button class="btn-action" onclick="tambahTransaksi()">Simpan Transaksi</button>
+            <button onclick="tambahTransaksi()">Simpan Transaksi</button>
         </div>
 
-        <!-- RIWAYAT TRANSAKSI (Hanya di Versi 2) -->
+        <!-- RIWAYAT TRANSAKSI (Hanya muncul di Versi 2) -->
         <div class="history-list hidden" id="historyListContainer">
             <div id="historyList">
-                <div style="color: var(--text-muted); text-align: center; font-size: 13px;">Belum ada transaksi</div>
+                <div style="color: #888; text-align: center; font-size: 13px;">Belum ada transaksi</div>
             </div>
         </div>
     </div>
@@ -317,19 +251,20 @@
         }
     });
 
-    const STORAGE_KEY = 'dompet_vzqaajoko_permanent_data_v4';
-    const THEME_KEY = 'dompet_theme_mode_v2';
-    const LOGIN_KEY = 'dompet_is_logged_in_v2';
+    const STORAGE_KEY = 'dompet_vzqaajoko_permanent_data_v3';
+    const THEME_KEY = 'dompet_theme_mode';
+    const LOGIN_KEY = 'dompet_is_logged_in';
 
     let appData = {
         saldo: 0,
         riwayat: []
     };
 
+    // Jalankan saat halaman pertama kali dibuka atau di-refresh
     window.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem(THEME_KEY);
-        if (savedTheme === 'light') {
-            document.body.classList.add('light-mode');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
         }
 
         const isLoggedIn = localStorage.getItem(LOGIN_KEY);
@@ -381,9 +316,9 @@
     }
 
     function toggleTheme() {
-        document.body.classList.toggle('light-mode');
-        const isLight = document.body.classList.contains('light-mode');
-        localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
     }
 
     function pilihVersi(v) {
@@ -418,7 +353,7 @@
             return;
         }
 
-        muatDataDariStorage();
+        muatDataDariStorage(); // Ambil data terbaru sebelum dihitung
 
         if (tipe === 'out' && nom > appData.saldo) {
             alert('Saldo tidak mencukupi!');
@@ -465,19 +400,21 @@
     }
 
     function updateUI() {
-        muatDataDariStorage();
+        muatDataDariStorage(); // Pastikan selalu membaca data terbaru dari memori browser
 
         document.getElementById('displaySaldo').innerText = new Intl.NumberFormat('id-ID', {
             style: 'currency', currency: 'IDR', maximumFractionDigits: 0
         }).format(appData.saldo);
 
+        // Render Grafik Fluktuasi di Versi 1
         renderFluktuasiChart();
 
+        // Render Riwayat di Versi 2
         const listContainer = document.getElementById('historyList');
         listContainer.innerHTML = '';
 
         if (!appData.riwayat || appData.riwayat.length === 0) {
-            listContainer.innerHTML = '<div style="color: var(--text-muted); text-align: center; font-size: 13px;">Belum ada transaksi</div>';
+            listContainer.innerHTML = '<div style="color: #888; text-align: center; font-size: 13px;">Belum ada transaksi</div>';
             return;
         }
 
@@ -485,11 +422,11 @@
             const div = document.createElement('div');
             div.className = 'history-item';
             const tanda = item.tipe === 'in' ? '+' : '-';
-            const warna = item.tipe === 'in' ? 'color: var(--success);' : 'color: var(--danger);';
+            const warna = item.tipe === 'in' ? 'color: green;' : 'color: red;';
             const nomFmt = new Intl.NumberFormat('id-ID').format(item.nominal);
 
             div.innerHTML = `
-                <span><b>${item.keterangan}</b><br><small style="${warna}; font-weight: 600;">${tanda} Rp ${nomFmt}</small></span>
+                <span><b>${item.keterangan}</b><br><small style="${warna}">${tanda} Rp ${nomFmt}</small></span>
                 <button class="btn-danger" onclick="hapusTransaksi(${item.id})">Hapus</button>
             `;
             listContainer.appendChild(div);
@@ -538,32 +475,19 @@
             ptsString += `${cx},${cy} `;
         });
 
-        // Buat Area Gradient di Bawah Garis
-        let areaPoints = `0,100 ${ptsString} ${width},100`;
-        let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        polygon.setAttribute('points', areaPoints);
-        polygon.setAttribute('fill', 'rgba(59, 130, 246, 0.15)');
-        svg.appendChild(polygon);
-
-        // Garis Grafik Utama
         let polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
         polyline.setAttribute('points', ptsString);
         polyline.setAttribute('fill', 'none');
-        polyline.setAttribute('stroke', '#3b82f6');
+        polyline.setAttribute('stroke', '#007bff');
         polyline.setAttribute('stroke-width', '3');
-        polyline.setAttribute('stroke-linecap', 'round');
-        polyline.setAttribute('stroke-linejoin', 'round');
         svg.appendChild(polyline);
 
-        // Titik-titik Data pada Grafik
         points.forEach(pt => {
             let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             circle.setAttribute('cx', pt.x);
             circle.setAttribute('cy', pt.y);
-            circle.setAttribute('r', '5');
-            circle.setAttribute('fill', '#3b82f6');
-            circle.setAttribute('stroke', '#ffffff');
-            circle.setAttribute('stroke-width', '2');
+            circle.setAttribute('r', '4');
+            circle.setAttribute('fill', '#007bff');
             svg.appendChild(circle);
         });
 
