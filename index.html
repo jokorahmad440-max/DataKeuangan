@@ -229,6 +229,46 @@
             text-align: center;
         }
 
+        /* Styling Ringkasan Keuangan Baru */
+        .summary-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .stat-card {
+            background: rgba(18, 18, 24, 0.5);
+            border: 1px solid var(--input-border);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .stat-card.full-width {
+            grid-column: span 2;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(230, 57, 70, 0.15), rgba(18, 18, 24, 0.6));
+            border-color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .stat-value.in { color: var(--success); }
+        .stat-value.out { color: var(--danger); }
+        .stat-value.sisa { color: var(--text-color); font-size: 16px; }
+
         svg.flame-chart {
             width: 100%;
             height: 120px;
@@ -301,7 +341,24 @@
 
         <div id="versi1Content">
             <div class="chart-box">
-                <p style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600; color: var(--text-muted);">📈 Grafik Fluktuasi Keuangan</p>
+                <p style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600; color: var(--text-muted);">📊 Ringkasan Total Keseluruhan</p>
+                
+                <div class="summary-stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-label">UANG MASUK</span>
+                        <span class="stat-value in" id="summaryTotalIn">Rp 0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">UANG KELUAR</span>
+                        <span class="stat-value out" id="summaryTotalOut">Rp 0</span>
+                    </div>
+                    <div class="stat-card full-width">
+                        <span class="stat-label">SISA SALDO</span>
+                        <span class="stat-value sisa" id="summarySisaSaldo">Rp 0</span>
+                    </div>
+                </div>
+
+                <p style="margin: 16px 0 8px 0; font-size: 13px; font-weight: 600; color: var(--text-muted);">📈 Grafik Fluktuasi Keuangan</p>
                 <svg class="flame-chart" id="fluctuationSvg" viewBox="0 0 300 100">
                 </svg>
                 <p id="flunctuationText" style="margin: 10px 0 0 0; font-size: 12px; color: var(--text-muted);">Belum ada fluktuasi data</p>
@@ -349,7 +406,7 @@
 <script>
     document.addEventListener('contextmenu', event => event.preventDefault());
 
-    const STORAGE_KEY = 'dompet_vzqaajoko_permanent_data_v8';
+    const STORAGE_KEY = 'dompet_vzqaajoko_permanent_data_v9';
     const THEME_KEY = 'dompet_theme_mode_v6';
     const LOGIN_KEY = 'dompet_is_logged_in_v6';
 
@@ -516,9 +573,22 @@
     function updateUI() {
         muatDataDariStorage();
 
-        document.getElementById('displaySaldo').innerText = new Intl.NumberFormat('id-ID', {
+        const formattedSaldo = new Intl.NumberFormat('id-ID', {
             style: 'currency', currency: 'IDR', maximumFractionDigits: 0
         }).format(appData.saldo);
+
+        document.getElementById('displaySaldo').innerText = formattedSaldo;
+        document.getElementById('summarySisaSaldo').innerText = formattedSaldo;
+
+        let totalIn = 0;
+        let totalOut = 0;
+        appData.riwayat.forEach(item => {
+            if (item.tipe === 'in') totalIn += item.nominal;
+            else totalOut += item.nominal;
+        });
+
+        document.getElementById('summaryTotalIn').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(totalIn);
+        document.getElementById('summaryTotalOut').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(totalOut);
 
         renderFluktuasiChart();
         renderMonthlySummary();
