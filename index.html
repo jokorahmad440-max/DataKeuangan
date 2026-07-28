@@ -202,7 +202,7 @@
             overflow: visible;
         }
 
-        /* Widget Lingkaran Progres (Accounts Receivable & Payable) */
+        /* Widget Lingkaran Progres */
         .progress-widget {
             display: flex;
             flex-direction: column;
@@ -213,7 +213,7 @@
         }
 
         .progress-value {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             margin-bottom: 8px;
         }
@@ -278,18 +278,18 @@
     </div>
 
 <div class="app-layout">
-    <!-- Sidebar Kiri ala Excel Dashboard -->
+    <!-- Sidebar Kiri -->
     <div class="sidebar">
         <div>
             <div class="sidebar-title">📊 Underworld BI</div>
             <ul class="sidebar-menu">
-                <li class="active">3. Cash Flow Dashboard</li>
+                <li class="active">3. Dashboard Arus Kas</li>
                 <li onclick="pilihVersi(2)">Input Transaksi</li>
                 <li onclick="toggleTheme()">🌙/☀️ Ganti Tema</li>
             </ul>
         </div>
-        <div style="font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--input-border); pt: 10px;">
-            User: <b>vzqaajoko</b><br>
+        <div style="font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--input-border); padding-top: 10px;">
+            Pengguna: <b>vzqaajoko</b><br>
             <button onclick="logout()" class="btn-danger" style="margin-top: 8px; width: 100%;">Keluar</button>
         </div>
     </div>
@@ -298,7 +298,7 @@
     <div class="main-content">
         <!-- BAGIAN LOGIN -->
         <div id="loginSection">
-            <h2>Login Dashboard</h2>
+            <h2>Masuk Dashboard</h2>
             <div class="form-group" style="margin-top: 15px;">
                 <label>Username</label>
                 <input type="text" id="inputUser" placeholder="Masukkan username">
@@ -314,38 +314,38 @@
         <div id="appSection" class="hidden">
             <div id="versi1Content">
                 <div class="top-header">
-                    <span><b>Cash Flow Overview (Jan 2026 - Des 2028)</b></span>
+                    <span><b>Ringkasan Arus Kas (Jan 2026 - Des 2028)</b></span>
                     <span id="displaySaldo" style="font-weight: 700; color: var(--success);">Saldo: Rp 0</span>
                 </div>
 
                 <div class="dashboard-grid">
                     <!-- Kotak Grafik Cash Flow Utama -->
                     <div class="card-box chart-container-large">
-                        <div class="card-title">Cash Flow (Cash in vs Cash out & Ending Balance)</div>
+                        <div class="card-title">Arus Kas (Pemasukan vs Pengeluaran & Sisa Saldo)</div>
                         <svg class="main-chart" id="mainCashFlowSvg" viewBox="0 0 600 180"></svg>
                         <div style="display: flex; justify-content: center; gap: 15px; font-size: 11px; margin-top: 8px;">
-                            <span style="color: var(--success);">■ Cash going in (+)</span>
-                            <span style="color: var(--danger);">■ Cash going out (-)</span>
-                            <span style="color: var(--text-color);">— Ending Cash on Hand</span>
+                            <span style="color: var(--success);">■ Pemasukan (+)</span>
+                            <span style="color: var(--danger);">■ Pengeluaran (-)</span>
+                            <span style="color: var(--text-color);">— Sisa Saldo Aktif</span>
                         </div>
                     </div>
 
                     <!-- Kotak Grafik Profit / Loss -->
                     <div class="card-box">
-                        <div class="card-title">Profit / Loss</div>
+                        <div class="card-title">Profit / Rugi</div>
                         <svg class="profit-chart" id="profitSvg" viewBox="0 0 300 130"></svg>
                     </div>
 
-                    <!-- Widget Accounts Receivable & Payable -->
+                    <!-- Widget Piutang & Hutang -->
                     <div class="card-box" style="display: flex; justify-content: space-around; align-items: center;">
                         <div class="progress-widget">
-                            <div class="card-title" style="margin-bottom:4px;">Accounts Receivable</div>
-                            <div class="progress-value" id="valReceivable">Rp 8.542</div>
+                            <div class="card-title" style="margin-bottom:4px;">Piutang Usaha</div>
+                            <div class="progress-value" id="valReceivable">Rp 8.542.000</div>
                             <div class="circular-progress" style="background: conic-gradient(var(--success) 92%, var(--input-border) 0);">92%</div>
                         </div>
                         <div class="progress-widget">
-                            <div class="card-title" style="margin-bottom:4px;">Accounts Payable</div>
-                            <div class="progress-value" id="valPayable">Rp 4.162</div>
+                            <div class="card-title" style="margin-bottom:4px;">Hutang Usaha</div>
+                            <div class="progress-value" id="valPayable">Rp 4.162.000</div>
                             <div class="circular-progress" style="background: conic-gradient(var(--danger) 96%, var(--input-border) 0);">96%</div>
                         </div>
                     </div>
@@ -370,13 +370,13 @@
                 <div class="form-group">
                     <label>Tipe Transaksi</label>
                     <select id="inputTipe">
-                        <option value="in">Cash Going In (+)</option>
-                        <option value="out">Cash Going Out (-)</option>
+                        <option value="in">Pemasukan (+)</option>
+                        <option value="out">Pengeluaran (-)</option>
                     </select>
                 </div>
                 <button class="btn-action" onclick="tambahTransaksi()">Simpan Transaksi</button>
 
-                <div style="margin-top: 20px; border-top: 1px solid var(--history-border); pt: 10px;">
+                <div style="margin-top: 20px; border-top: 1px solid var(--history-border); padding-top: 10px;">
                     <h4 style="margin-bottom: 8px; font-size: 14px;">Riwayat Transaksi Tersimpan</h4>
                     <div id="historyList" style="max-height: 180px; overflow-y: auto;">
                         <div style="color: var(--text-muted); font-size: 12px; text-align: center;">Belum ada transaksi</div>
@@ -390,9 +390,9 @@
 <script>
     document.addEventListener('contextmenu', event => event.preventDefault());
 
-    const STORAGE_KEY = 'dompet_vzqaajoko_dashboard_v9';
-    const THEME_KEY = 'dompet_theme_dashboard_v9';
-    const LOGIN_KEY = 'dompet_login_dashboard_v9';
+    const STORAGE_KEY = 'dompet_vzqaajoko_dashboard_id_v10';
+    const THEME_KEY = 'dompet_theme_dashboard_id_v10';
+    const LOGIN_KEY = 'dompet_login_dashboard_id_v10';
 
     let appData = { saldo: 0, riwayat: [] };
 
@@ -494,7 +494,6 @@
         renderMainChart();
         renderProfitChart();
 
-        // Render Riwayat
         const historyContainer = document.getElementById('historyList');
         historyContainer.innerHTML = '';
         if (appData.riwayat.length === 0) {
@@ -516,17 +515,14 @@
         const svg = document.getElementById('mainCashFlowSvg');
         svg.innerHTML = '';
         
-        // Buat data bulanan dari transaksi riil (atau dummy jika kosong agar mirip gambar)
         let months = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'];
         let stepX = 600 / 12;
 
         months.forEach((m, idx) => {
             let x = idx * stepX + 15;
-            // Bar Cash In (Hijau) & Cash Out (Merah) simulasi/riil
             let hIn = 40 + Math.sin(idx) * 30;
             let hOut = 45 + Math.cos(idx) * 25;
 
-            // Bar Cash In
             let rectIn = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             rectIn.setAttribute('x', x);
             rectIn.setAttribute('y', 140 - hIn);
@@ -535,7 +531,6 @@
             rectIn.setAttribute('fill', 'var(--success)');
             svg.appendChild(rectIn);
 
-            // Bar Cash Out
             let rectOut = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             rectOut.setAttribute('x', x + 12);
             rectOut.setAttribute('y', 140 - hOut);
@@ -544,7 +539,6 @@
             rectOut.setAttribute('fill', 'var(--danger)');
             svg.appendChild(rectOut);
 
-            // Label Bulan
             let text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', x + 10);
             text.setAttribute('y', 165);
@@ -555,7 +549,6 @@
             svg.appendChild(text);
         });
 
-        // Garis Ending Cash on Hand (Hitam/Putih)
         let line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         let d = "M 25 100 Q 70 80, 125 110 T 245 90 T 365 70 T 485 120 T 575 130";
         line.setAttribute('d', d);
@@ -583,7 +576,7 @@
             rect.setAttribute('width', 12);
             rect.setAttribute('height', Math.max(height, 3));
             rect.setAttribute('fill', hVal >= 0 ? 'var(--success)' : 'var(--danger)');
-            svg.appendChild(rect.rect || rect);
+            svg.appendChild(rect);
 
             let text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', x + 6);
