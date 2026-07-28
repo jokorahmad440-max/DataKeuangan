@@ -459,14 +459,14 @@
         const user = document.getElementById('inputUser').value.trim();
         const pin = document.getElementById('inputPin').value.trim();
 
-        if (user === 'vzqaajoko' && pin === '0000') {
+        if (user === 'vzqaajoko' && pin === '1') {
             localStorage.setItem(LOGIN_KEY, 'true');
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('appSection').classList.remove('hidden');
             muatDataDariStorage();
             updateUI();
         } else {
-            alert('Username atau PIN salah! Gunakan vzqaajoko dan 0000');
+            alert('Pasword salah');
         }
     }
 
