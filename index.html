@@ -34,7 +34,40 @@
             align-items: center;
             min-height: 100vh;
             transition: background 0.3s, color 0.3s;
+            position: relative;
         }
+
+        /* Posisi Tombol Versi 1 & 2 di Luar (Sesuai Panah Merah) */
+        .external-version-menu {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .btn-external-version {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            text-align: center;
+            opacity: 0.6;
+            transition: all 0.2s;
+        }
+
+        .btn-external-version.active {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
         .container {
             width: 100%;
             max-width: 420px;
@@ -98,30 +131,6 @@
             border-bottom: 1px solid var(--history-border);
             padding-bottom: 10px;
         }
-        /* Pemisahan Versi 1 & 2 menjadi tombol terpisah */
-        .version-container {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        .btn-version {
-            width: 100%;
-            padding: 10px;
-            font-size: 14px;
-            font-weight: bold;
-            border: 2px solid #007bff;
-            background-color: transparent;
-            color: #007bff;
-            border-radius: 6px;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s;
-        }
-        .btn-version.active {
-            background-color: #007bff;
-            color: white;
-        }
         .history-list {
             margin-top: 20px;
             max-height: 180px;
@@ -149,6 +158,12 @@
     </style>
 </head>
 <body>
+
+    <!-- Menu Versi 1 & 2 di Luar (Sesuai Panah Merah) -->
+    <div class="external-version-menu" id="externalMenu">
+        <button id="btnVer1" class="btn-external-version active" onclick="pilihVersi(1)">Versi 1</button>
+        <button id="btnVer2" class="btn-external-version" onclick="pilihVersi(2)">Versi 2</button>
+    </div>
 
 <div class="container">
     <!-- BAGIAN LOGIN -->
@@ -178,12 +193,6 @@
         <h2>Dompet Digital</h2>
         
         <div class="saldo-box" id="displaySaldo">Rp 0</div>
-
-        <!-- Tombol Pemisah Versi 1 & Versi 2 yang Terpisah -->
-        <div class="version-container">
-            <button id="btnVer1" class="btn-version active" onclick="pilihVersi(1)">Versi 1</button>
-            <button id="btnVer2" class="btn-version" onclick="pilihVersi(2)">Versi 2</button>
-        </div>
 
         <!-- TAMPILAN VERSI 1: FLUKTUASI -->
         <div id="versi1Box" class="version-box">
@@ -243,7 +252,6 @@
         riwayat: []
     };
 
-    // Muat data permanen saat halaman dibuka / direfresh
     window.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem(THEME_KEY);
         if (savedTheme === 'dark') {
@@ -333,7 +341,7 @@
             return;
         }
 
-        muatDataDariStorage(); // Ambil data terbaru agar sinkron
+        muatDataDariStorage();
 
         if (tipe === 'out' && nom > appData.saldo) {
             alert('Saldo tidak mencukupi!');
@@ -381,7 +389,6 @@
         updateUI();
     }
 
-    // Sinkronisasi otomatis antar browser / tab secara real-time
     broadcastChannel.onmessage = function(event) {
         if (event.data) {
             appData = event.data;
