@@ -168,6 +168,12 @@
 
         button.btn-action:hover { opacity: 0.95; transform: translateY(-1px); }
         button.btn-action:active { transform: translateY(0); }
+        button.btn-action:disabled {
+            background: #4a4a5a;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
 
         .btn-secondary {
             background-color: var(--input-border);
@@ -322,7 +328,8 @@
             <label>PIN</label>
             <input type="password" id="inputPin" maxlength="4" placeholder="Masukkan PIN">
         </div>
-        <button class="btn-action" onclick="login()" style="margin-top: 10px;">Masuk</button>
+        <button class="btn-action" id="btnLogin" onclick="login()" style="margin-top: 10px;">Masuk</button>
+        <p id="loginErrorMsg" style="color: var(--danger); font-size: 12px; text-align: center; margin-top: 10px;"></p>
     </div>
 
     <div id="appSection" class="hidden">
@@ -374,7 +381,9 @@
         <div id="versi2Content" class="hidden">
             <div class="form-group">
                 <label>Bulan Transaksi</label>
-                <input type="month" id="inputBulan" min="2026-01" max="2028-12">
+                <select id="inputBulan">
+                    <!-- Opsi bulan akan diisi otomatis oleh JavaScript -->
+                </select>
             </div>
             <div class="form-group">
                 <label>Keterangan</label>
@@ -408,6 +417,7 @@
     const STORAGE_KEY = 'dompet_vzqaajoko_permanent_data_v11';
     const THEME_KEY = 'dompet_theme_mode_v6';
     const LOGIN_KEY = 'dompet_is_logged_in_v6';
+    const ATTEMPT_KEY = 'dompet_failed_attempts_v1';
 
     let appData = {
         saldo: 0,
@@ -424,21 +434,49 @@
         if (isLoggedIn === 'true') {
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('appSection').classList.remove('hidden');
+        } else {
+            cekStatusBlokir();
         }
 
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const monthInput = document.getElementById('inputBulan');
-        if(monthInput) {
-            monthInput.value = `${year}-${month}`;
-            monthInput.min = "2026-01";
-            monthInput.max = "2028-12";
+        // Generate opsi dropdown bulan (Jan 2026 - Des 2028)
+        const monthSelect = document.getElementById('inputBulan');
+        if(monthSelect) {
+            const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            
+            for(let y = 2026; y <= 2028; y++) {
+                for(let m = 1; m <= 12; m++) {
+                    let mStr = m < 10 ? '0' + m : '' + m;
+                    let val = `${y}-${mStr}`;
+                    let text = `${namaBulanIndo[m - 1]} ${y}`;
+                    
+                    let opt = document.createElement('option');
+                    opt.value = val;
+                    opt.text = text;
+                    monthSelect.appendChild(opt);
+                }
+            }
+
+            const now = new Date();
+            const currY = now.getFullYear();
+            const currM = String(now.getMonth() + 1).padStart(2, '0');
+            if(currY >= 2026 && currY <= 2028) {
+                monthSelect.value = `${currY}-${currM}`;
+            }
         }
 
         muatDataDariStorage();
         updateUI();
     });
+
+    function cekStatusBlokir() {
+        let attempts = parseInt(localStorage.getItem(ATTEMPT_KEY) || '0');
+        if (attempts >= 3) {
+            document.getElementById('btnLogin').disabled = true;
+            document.getElementById('inputUser').disabled = true;
+            document.getElementById('inputPin').disabled = true;
+            document.getElementById('loginErrorMsg').innerText = 'Akun terblokir karena 3x salah password/PIN!';
+        }
+    }
 
     function muatDataDariStorage() {
         try {
@@ -456,17 +494,29 @@
     }
 
     function login() {
+        let attempts = parseInt(localStorage.getItem(ATTEMPT_KEY) || '0');
+        if (attempts >= 3) return;
+
         const user = document.getElementById('inputUser').value.trim();
         const pin = document.getElementById('inputPin').value.trim();
 
         if (user === 'vzqaajoko' && pin === '1') {
             localStorage.setItem(LOGIN_KEY, 'true');
+            localStorage.setItem(ATTEMPT_KEY, '0');
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('appSection').classList.remove('hidden');
             muatDataDariStorage();
             updateUI();
         } else {
-            alert('Password salah');
+            attempts++;
+            localStorage.setItem(ATTEMPT_KEY, attempts);
+            let sisa = 3 - attempts;
+            
+            if (attempts >= 3) {
+                cekStatusBlokir();
+            } else {
+                document.getElementById('loginErrorMsg').innerText = `Password salah! Sisa percobaan: ${sisa}x lagi.`;
+            }
         }
     }
 
