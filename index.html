@@ -229,7 +229,6 @@
             text-align: center;
         }
 
-        /* Styling Ringkasan Keuangan Baru */
         .summary-stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -374,8 +373,8 @@
 
         <div id="versi2Content" class="hidden">
             <div class="form-group">
-                <label>Tanggal Transaksi</label>
-                <input type="date" id="inputTanggal" min="2026-01-01" max="2028-12-31">
+                <label>Bulan Transaksi</label>
+                <input type="month" id="inputBulan" min="2026-01" max="2028-12">
             </div>
             <div class="form-group">
                 <label>Keterangan</label>
@@ -406,7 +405,7 @@
 <script>
     document.addEventListener('contextmenu', event => event.preventDefault());
 
-    const STORAGE_KEY = 'dompet_vzqaajoko_permanent_data_v9';
+    const STORAGE_KEY = 'dompet_vzqaajoko_permanent_data_v11';
     const THEME_KEY = 'dompet_theme_mode_v6';
     const LOGIN_KEY = 'dompet_is_logged_in_v6';
 
@@ -427,12 +426,14 @@
             document.getElementById('appSection').classList.remove('hidden');
         }
 
-        const today = new Date().toISOString().split('T')[0];
-        const dateInput = document.getElementById('inputTanggal');
-        if(dateInput) {
-            dateInput.value = today;
-            dateInput.min = "2026-01-01";
-            dateInput.max = "2028-12-31";
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const monthInput = document.getElementById('inputBulan');
+        if(monthInput) {
+            monthInput.value = `${year}-${month}`;
+            monthInput.min = "2026-01";
+            monthInput.max = "2028-12";
         }
 
         muatDataDariStorage();
@@ -506,13 +507,13 @@
     }
 
     function tambahTransaksi() {
-        const tgl = document.getElementById('inputTanggal').value;
+        const bln = document.getElementById('inputBulan').value;
         const ket = document.getElementById('inputKeterangan').value.trim() || 'Transaksi';
         const nom = parseFloat(document.getElementById('inputNominal').value);
         const tipe = document.getElementById('inputTipe').value;
 
-        if (!tgl) {
-            alert('Pilih tanggal transaksi terlebih dahulu!');
+        if (!bln) {
+            alert('Pilih bulan transaksi terlebih dahulu!');
             return;
         }
 
@@ -536,7 +537,7 @@
 
         appData.riwayat.unshift({
             id: Date.now(),
-            tanggal: tgl,
+            bulan: bln,
             keterangan: ket,
             nominal: nom,
             tipe: tipe
@@ -568,6 +569,13 @@
     function simpanData() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         updateUI();
+    }
+
+    function formatNamaBulan(yymm) {
+        if (!yymm) return '-';
+        let [y, m] = yymm.split('-');
+        let dateObj = new Date(y, m - 1, 1);
+        return dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
     }
 
     function updateUI() {
@@ -607,10 +615,12 @@
             const tanda = item.tipe === 'in' ? '+' : '-';
             const warna = item.tipe === 'in' ? 'color: var(--success);' : 'color: var(--danger);';
             const nomFmt = new Intl.NumberFormat('id-ID').format(item.nominal);
-            const tglFormatted = item.tanggal ? item.tanggal : '-';
+            
+            let rawBulan = item.bulan || (item.tanggal ? item.tanggal.substring(0, 7) : '');
+            let bulanFormatted = formatNamaBulan(rawBulan);
 
             div.innerHTML = `
-                <span><b>${item.keterangan}</b> <small style="color: var(--text-muted);">(${tglFormatted})</small><br><small style="${warna}; font-weight: 600;">${tanda} Rp ${nomFmt}</small></span>
+                <span><b>${item.keterangan}</b> <small style="color: var(--text-muted);">(${bulanFormatted})</small><br><small style="${warna}; font-weight: 600;">${tanda} Rp ${nomFmt}</small></span>
                 <button class="btn-danger" onclick="hapusTransaksi(${item.id})">Hapus</button>
             `;
             listContainer.appendChild(div);
@@ -629,29 +639,28 @@
             }
         }
 
-        const pengeluaranList = appData.riwayat.filter(item => item.tipe === 'out' && item.tanggal);
+        const pengeluaranList = appData.riwayat.filter(item => item.tipe === 'out');
 
         let monthlyMap = {};
         allMonths.forEach(m => monthlyMap[m] = 0);
 
         let totalSemuaBulan = 0;
         pengeluaranList.forEach(item => {
-            let bulanKey = item.tanggal.substring(0, 7);
-            if (monthlyMap[bulanKey] !== undefined) {
+            let bulanKey = item.bulan || (item.tanggal ? item.tanggal.substring(0, 7) : '');
+            if (bulanKey && monthlyMap[bulanKey] !== undefined) {
                 monthlyMap[bulanKey] += item.nominal;
-            } else {
+                totalSemuaBulan += item.nominal;
+            } else if (bulanKey) {
                 monthlyMap[bulanKey] = item.nominal;
+                totalSemuaBulan += item.nominal;
             }
-            totalSemuaBulan += item.nominal;
         });
 
         let hasData = false;
         allMonths.forEach(bulanKey => {
             if (monthlyMap[bulanKey] > 0) {
                 hasData = true;
-                let [y, m] = bulanKey.split('-');
-                let dateObj = new Date(y, m - 1, 1);
-                let namaBulan = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                let namaBulan = formatNamaBulan(bulanKey);
                 let nominalBulanFmt = new Intl.NumberFormat('id-ID').format(monthlyMap[bulanKey]);
 
                 let rowDiv = document.createElement('div');
