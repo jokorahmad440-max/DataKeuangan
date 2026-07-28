@@ -3,25 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dompet Digital</title>
+    <title>Dompet Digital Profesional</title>
     <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --input-bg: #ffffff;
+            --input-border: #ccc;
+            --history-border: #eee;
+        }
+
+        .dark-mode {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --input-bg: #2d2d2d;
+            --input-border: #444;
+            --history-border: #333;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
         }
         .container {
             width: 100%;
-            max-width: 400px;
-            background: white;
+            max-width: 420px;
+            background: var(--container-bg);
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: background 0.3s;
         }
-        h2 { text-align: center; color: #333; margin-top: 0; }
+        h2 { text-align: center; margin-top: 0; }
         .saldo-box {
             background: #007bff;
             color: white;
@@ -35,12 +58,14 @@
         .form-group {
             margin-bottom: 15px;
         }
-        label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; }
         input, select {
             width: 100%;
             padding: 10px;
             box-sizing: border-box;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
             border-radius: 4px;
             font-size: 14px;
         }
@@ -54,181 +79,287 @@
             font-size: 16px;
             cursor: pointer;
         }
-        button:hover { background-color: #218838; }
+        button:hover { opacity: 0.9; }
+        .btn-secondary {
+            background-color: #6c757d;
+            margin-top: 5px;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            padding: 4px 8px;
+            font-size: 12px;
+            width: auto;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--history-border);
+            padding-bottom: 10px;
+        }
         .history-list {
             margin-top: 20px;
-            max-height: 150px;
+            max-height: 180px;
             overflow-y: auto;
-            border-top: 1px solid #eee;
+            border-top: 1px solid var(--history-border);
             padding-top: 10px;
         }
         .history-item {
             font-size: 14px;
-            padding: 6px 0;
-            border-bottom: 1px solid #f9f9f9;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--history-border);
             display: flex;
             justify-content: space-between;
+            align-items: center;
+        }
+        .hidden { display: none !important; }
+        .version-box {
+            background: rgba(0, 123, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Dompet Digital</h2>
-    
-    <!-- Kotak Saldo -->
-    <div class="saldo-box" id="displaySaldo">Rp 0</div>
+    <!-- BAGIAN LOGIN -->
+    <div id="loginSection">
+        <h2>Login Dompet</h2>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="inputUser" placeholder="Masukkan username">
+        </div>
+        <div class="form-group">
+            <label>PIN</label>
+            <input type="password" id="inputPin" maxlength="4" placeholder="Masukkan PIN">
+        </div>
+        <button onclick="login()">Masuk</button>
+    </div>
 
-    <!-- Form Input -->
-    <div class="form-group">
-        <label>Keterangan</label>
-        <input type="text" id="inputKeterangan" placeholder="Contoh: Gaji / Belanja">
-    </div>
-    <div class="form-group">
-        <label>Nominal (Rp)</label>
-        <input type="number" id="inputNominal" placeholder="Contoh: 50000">
-    </div>
-    <div class="form-group">
-        <label>Tipe Transaksi</label>
-        <select id="inputTipe">
-            <option value="in">Pemasukan (+)</option>
-            <option value="out">Pengeluaran (-)</option>
-        </select>
-    </div>
-    <button onclick="prosesTransaksi()">Simpan Transaksi</button>
+    <!-- BAGIAN APLIKASI UTAMA -->
+    <div id="appSection" class="hidden">
+        <div class="top-bar">
+            <span><b>vzqaajoko</b></span>
+            <div>
+                <button onclick="toggleTheme()" class="btn-secondary" style="padding: 4px 8px; font-size: 12px; width: auto;">🌙/☀️ Tema</button>
+                <button onclick="logout()" class="btn-danger" style="padding: 4px 8px; font-size: 12px;">Keluar</button>
+            </div>
+        </div>
 
-    <!-- Riwayat -->
-    <div class="history-list" id="historyList">
-        <div style="color: #888; text-align: center; font-size: 13px;">Belum ada transaksi</div>
+        <h2>Dompet Digital</h2>
+        
+        <div class="saldo-box" id="displaySaldo">Rp 0</div>
+
+        <!-- Pilihan Versi Tampilan -->
+        <div class="form-group">
+            <label>Pilih Versi Tampilan:</label>
+            <select id="pilihVersi" onchange="gantiVersi()">
+                <option value="1">Versi 1: Grafik & Fluktuasi</option>
+                <option value="2">Versi 2: Rinci Uang Masuk / Keluar</option>
+            </select>
+        </div>
+
+        <!-- TAMPILAN VERSI 1: FLUKTUASI -->
+        <div id="versi1Box" class="version-box">
+            📊 <b>Analisis Fluktuasi:</b> <span id="infoFluktuasi">Stabil</span>
+        </div>
+
+        <!-- TAMPILAN VERSI 2: RINGKASAN MASUK/KELUAR -->
+        <div id="versi2Box" class="version-box hidden">
+            📥 Masuk: <span id="totalMasuk" style="color: green; font-weight: bold;">Rp 0</span> | 
+            📤 Keluar: <span id="totalKeluar" style="color: red; font-weight: bold;">Rp 0</span>
+        </div>
+
+        <!-- FORM TRANSAKSI -->
+        <div class="form-group">
+            <label>Keterangan</label>
+            <input type="text" id="inputKeterangan" placeholder="Contoh: Gaji / Belanja">
+        </div>
+        <div class="form-group">
+            <label>Nominal (Rp)</label>
+            <input type="number" id="inputNominal" placeholder="Contoh: 50000">
+        </div>
+        <div class="form-group">
+            <label>Tipe Transaksi</label>
+            <select id="inputTipe">
+                <option value="in">Pemasukan (+)</option>
+                <option value="out">Pengeluaran (-)</option>
+            </select>
+        </div>
+        <button onclick="tambahTransaksi()">Simpan Transaksi</button>
+
+        <!-- RIWAYAT TRANSAKSI -->
+        <div class="history-list" id="historyList">
+            <div style="color: #888; text-align: center; font-size: 13px;">Belum ada transaksi</div>
+        </div>
     </div>
 </div>
 
 <script>
-    // Kunci unik penyimpanan agar aman di GitHub Pages / browser
-    const STORAGE_KEY = 'app_saldo_data_v3';
-    const SYNC_CHANNEL = 'app_saldo_sync_channel';
-    const broadcastChannel = new BroadcastChannel(SYNC_CHANNEL);
+    const STORAGE_KEY = 'dompet_vzqaajoko_data';
+    const THEME_KEY = 'dompet_theme_mode';
 
-    // 1. Ambil Data dari localStorage dengan Aman
-    function ambilData() {
-        try {
-            const dataSimpanan = localStorage.getItem(STORAGE_KEY);
-            if (!dataSimpanan) {
-                return { saldo: 0, riwayat: [] };
-            }
-            const parsed = JSON.parse(dataSimpanan);
-            return {
-                saldo: typeof parsed.saldo === 'number' ? parsed.saldo : 0,
-                riwayat: Array.isArray(parsed.riwayat) ? parsed.riwayat : []
-            };
-        } catch (err) {
-            return { saldo: 0, riwayat: [] };
-        }
-    }
-
-    // 2. Simpan Data Secara Permanen & Broadcast ke Tab Lain
-    function simpanData(data, broadcast = true) {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            if (broadcast) {
-                broadcastChannel.postMessage(data);
-            }
-        } catch (err) {}
-    }
-
-    // 3. Perbarui Tampilan Layar (UI)
-    function updateTampilan(data) {
-        const formatRupiah = new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            maximumFractionDigits: 0
-        }).format(data.saldo);
-
-        document.getElementById('displaySaldo').innerText = formatRupiah;
-
-        const historyContainer = document.getElementById('historyList');
-        historyContainer.innerHTML = '';
-
-        if (data.riwayat.length === 0) {
-            historyContainer.innerHTML = '<div style="color: #888; text-align: center; font-size: 13px;">Belum ada transaksi</div>';
-            return;
-        }
-
-        data.riwayat.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            const nominalFormat = new Intl.NumberFormat('id-ID').format(item.nominal);
-            const tanda = item.tipe === 'in' ? '+' : '-';
-            const warna = item.tipe === 'in' ? 'color: green;' : 'color: red;';
-            
-            div.innerHTML = `
-                <span>${item.keterangan}</span>
-                <span style="font-weight: bold; ${warna}">${tanda} Rp ${nominalFormat}</span>
-            `;
-            historyContainer.appendChild(div);
-        });
-    }
-
-    // 4. Proses Tombol Simpan Transaksi
-    function prosesTransaksi() {
-        const ketInput = document.getElementById('inputKeterangan');
-        const nomInput = document.getElementById('inputNominal');
-        const tipeInput = document.getElementById('inputTipe');
-
-        const keterangan = ketInput.value.trim() || (tipeInput.value === 'in' ? 'Pemasukan' : 'Pengeluaran');
-        const nominal = parseFloat(nomInput.value);
-
-        if (isNaN(nominal) || nominal <= 0) {
-            alert('Masukkan nominal angka yang benar!');
-            return;
-        }
-
-        let dataAktif = ambilData();
-
-        if (tipeInput.value === 'in') {
-            dataAktif.saldo += nominal;
-        } else {
-            if (nominal > dataAktif.saldo) {
-                alert('Saldo tidak mencukupi untuk pengeluaran ini!');
-                return;
-            }
-            dataAktif.saldo -= nominal;
-        }
-
-        dataAktif.riwayat.unshift({
-            keterangan: keterangan,
-            nominal: nominal,
-            tipe: tipeInput.value
-        });
-
-        simpanData(dataAktif, true);
-        updateTampilan(dataAktif);
-
-        ketInput.value = '';
-        nomInput.value = '';
-    }
-
-    // 5. Sinkronisasi Real-Time Antar Tab / Browser
-    broadcastChannel.onmessage = function(event) {
-        if (event.data) {
-            updateTampilan(event.data);
-        }
+    let appData = {
+        saldo: 0,
+        riwayat: []
     };
 
-    window.addEventListener('storage', function(e) {
-        if (e.key === STORAGE_KEY && e.newValue) {
-            try {
-                const dataBaru = JSON.parse(e.newValue);
-                updateTampilan(dataBaru);
-            } catch (err) {}
+    // Cek Login & Tema saat pertama muat
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem(THEME_KEY);
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+
+        const dataLocal = localStorage.getItem(STORAGE_KEY);
+        if (dataLocal) {
+            appData = JSON.parse(dataLocal);
         }
     });
 
-    // 6. Eksekusi Saat Halaman Dimuat / Direfresh
-    window.addEventListener('DOMContentLoaded', () => {
-        const dataAwal = ambilData();
-        updateTampilan(dataAwal);
-    });
+    function login() {
+        const user = document.getElementById('inputUser').value.trim();
+        const pin = document.getElementById('inputPin').value.trim();
+
+        if (user === 'vzqaajoko' && pin === '0000') {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('appSection').classList.remove('hidden');
+            updateUI();
+        } else {
+            alert('Username atau PIN salah! Gunakan vzqaajoko dan 0000');
+        }
+    }
+
+    function logout() {
+        document.getElementById('appSection').classList.add('hidden');
+        document.getElementById('loginSection').classList.remove('hidden');
+        document.getElementById('inputUser').value = '';
+        document.getElementById('inputPin').value = '';
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+    }
+
+    function gantiVersi() {
+        const v = document.getElementById('pilihVersi').value;
+        if (v === '1') {
+            document.getElementById('versi1Box').classList.remove('hidden');
+            document.getElementById('versi2Box').classList.add('hidden');
+        } else {
+            document.getElementById('versi1Box').classList.add('hidden');
+            document.getElementById('versi2Box').classList.remove('hidden');
+        }
+    }
+
+    function tambahTransaksi() {
+        const ket = document.getElementById('inputKeterangan').value.trim() || 'Transaksi';
+        const nom = parseFloat(document.getElementById('inputNominal').value);
+        const tipe = document.getElementById('inputTipe').value;
+
+        if (isNaN(nom) || nom <= 0) {
+            alert('Masukkan nominal yang valid!');
+            return;
+        }
+
+        if (tipe === 'out' && nom > appData.saldo) {
+            alert('Saldo tidak mencukupi!');
+            return;
+        }
+
+        if (tipe === 'in') {
+            appData.saldo += nom;
+        } else {
+            appData.saldo -= nom;
+        }
+
+        appData.riwayat.unshift({
+            id: Date.now(),
+            keterangan: ket,
+            nominal: nom,
+            tipe: tipe
+        });
+
+        simpanDanUpdate();
+        
+        document.getElementById('inputKeterangan').value = '';
+        document.getElementById('inputNominal').value = '';
+    }
+
+    function hapusTransaksi(id) {
+        const index = appData.riwayat.findIndex(item => item.id === id);
+        if (index !== -1) {
+            const item = appData.riwayat[index];
+            // Kembalikan saldo saat dihapus
+            if (item.tipe === 'in') {
+                appData.saldo -= item.nominal;
+            } else {
+                appData.saldo += item.nominal;
+            }
+            appData.riwayat.splice(index, 1);
+            simpanDanUpdate();
+        }
+    }
+
+    function simpanDanUpdate() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        updateUI();
+    }
+
+    function updateUI() {
+        // Format Saldo
+        document.getElementById('displaySaldo').innerText = new Intl.NumberFormat('id-ID', {
+            style: 'currency', currency: 'IDR', maximumFractionDigits: 0
+        }).format(appData.saldo);
+
+        // Hitung Versi 2 (Total Masuk & Keluar)
+        let totalIn = 0;
+        let totalOut = 0;
+        appData.riwayat.forEach(item => {
+            if (item.tipe === 'in') totalIn += item.nominal;
+            else totalOut += item.nominal;
+        });
+
+        document.getElementById('totalMasuk').innerText = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', maximumFractionDigits: 0}).format(totalIn);
+        document.getElementById('totalKeluar').innerText = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', maximumFractionDigits: 0}).format(totalOut);
+
+        // Versi 1 (Fluktuasi)
+        let fluktuasiText = "Stabil ➡️";
+        if (totalIn > totalOut) fluktuasiText = "Naik / Surplus 📈";
+        else if (totalOut > totalIn) fluktuasiText = "Menurun / Defisit 📉";
+        document.getElementById('infoFluktuasi').innerText = fluktuasiText;
+
+        // Render Riwayat
+        const listContainer = document.getElementById('historyList');
+        listContainer.innerHTML = '';
+
+        if (appData.riwayat.length === 0) {
+            listContainer.innerHTML = '<div style="color: #888; text-align: center; font-size: 13px;">Belum ada transaksi</div>';
+            return;
+        }
+
+        appData.riwayat.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            const tanda = item.tipe === 'in' ? '+' : '-';
+            const warna = item.tipe === 'in' ? 'color: green;' : 'color: red;';
+            const nomFmt = new Intl.NumberFormat('id-ID').format(item.nominal);
+
+            div.innerHTML = `
+                <span><b>${item.keterangan}</b><br><small style="${warna}">${tanda} Rp ${nomFmt}</small></span>
+                <button class="btn-danger" onclick="hapusTransaksi(${item.id})">Hapus</button>
+            `;
+            listContainer.appendChild(div);
+        });
+    }
 </script>
 
 </body>
