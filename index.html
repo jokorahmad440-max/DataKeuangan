@@ -334,7 +334,7 @@
             </div>
         </div>
 
-        <h2>Keuangan negara</h2>
+        <h2>KEUANGAN NEGARA</h2>
         
         <div class="saldo-box" id="displaySaldo">Rp 0</div>
 
@@ -466,11 +466,14 @@
             muatDataDariStorage();
             updateUI();
         } else {
-            alert('Pasword salah');
+            alert('Password salah');
         }
     }
 
     function logout() {
+        if (!confirm('Apakah anda yakin ingin keluar')) {
+            return;
+        }
         localStorage.removeItem(LOGIN_KEY);
         document.getElementById('appSection').classList.add('hidden');
         document.getElementById('loginSection').classList.remove('hidden');
@@ -529,6 +532,10 @@
             return;
         }
 
+        if (!confirm('Apakah anda yakin ingin simpan transaksi')) {
+            return;
+        }
+
         if (tipe === 'in') {
             appData.saldo += nom;
         } else {
@@ -552,6 +559,9 @@
     }
 
     function hapusTransaksi(id) {
+        if (!confirm('Apakah anda yakin ingin menghapus')) {
+            return;
+        }
         muatDataDariStorage();
         const index = appData.riwayat.findIndex(item => item.id === id);
         if (index !== -1) {
