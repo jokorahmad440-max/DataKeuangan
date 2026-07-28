@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dompet Digital</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        .saldo-box {
+            background: #007bff;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #218838; }
+        .history-list {
+            margin-top: 20px;
+            max-height: 150px;
+            overflow-y: auto;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        .history-item {
+            font-size: 14px;
+            padding: 6px 0;
+            border-bottom: 1px solid #f9f9f9;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Dompet Digital</h2>
+    
+    <!-- Kotak Saldo -->
+    <div class="saldo-box" id="displaySaldo">Rp 0</div>
+
+    <!-- Form Input -->
+    <div class="form-group">
+        <label>Keterangan</label>
+        <input type="text" id="inputKeterangan" placeholder="Contoh: Gaji / Belanja">
+    </div>
+    <div class="form-group">
+        <label>Nominal (Rp)</label>
+        <input type="number" id="inputNominal" placeholder="Contoh: 50000">
+    </div>
+    <div class="form-group">
+        <label>Tipe Transaksi</label>
+        <select id="inputTipe">
+            <option value="in">Pemasukan (+)</option>
+            <option value="out">Pengeluaran (-)</option>
+        </select>
+    </div>
+    <button onclick="prosesTransaksi()">Simpan Transaksi</button>
+
+    <!-- Riwayat -->
+    <div class="history-list" id="historyList">
+        <div style="color: #888; text-align: center; font-size: 13px;">Belum ada transaksi</div>
+    </div>
+</div>
+
+<script>
+    // Kunci unik penyimpanan agar aman di GitHub Pages / browser
+    const STORAGE_KEY = 'app_saldo_data_v3';
+    const SYNC_CHANNEL = 'app_saldo_sync_channel';
+    const broadcastChannel = new BroadcastChannel(SYNC_CHANNEL);
+
+    // 1. Ambil Data dari localStorage dengan Aman
+    function ambilData() {
+        try {
+            const dataSimpanan = localStorage.getItem(STORAGE_KEY);
+            if (!dataSimpanan) {
+                return { saldo: 0, riwayat: [] };
+            }
+            const parsed = JSON.parse(dataSimpanan);
+            return {
+                saldo: typeof parsed.saldo === 'number' ? parsed.saldo : 0,
+                riwayat: Array.isArray(parsed.riwayat) ? parsed.riwayat : []
+            };
+        } catch (err) {
+            return { saldo: 0, riwayat: [] };
+        }
+    }
+
+    // 2. Simpan Data Secara Permanen & Broadcast ke Tab Lain
+    function simpanData(data, broadcast = true) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            if (broadcast) {
+                broadcastChannel.postMessage(data);
+            }
+        } catch (err) {}
+    }
+
+    // 3. Perbarui Tampilan Layar (UI)
+    function updateTampilan(data) {
+        const formatRupiah = new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            maximumFractionDigits: 0
+        }).format(data.saldo);
+
+        document.getElementById('displaySaldo').innerText = formatRupiah;
+
+        const historyContainer = document.getElementById('historyList');
+        historyContainer.innerHTML = '';
+
+        if (data.riwayat.length === 0) {
+            historyContainer.innerHTML = '<div style="color: #888; text-align: center; font-size: 13px;">Belum ada transaksi</div>';
+            return;
+        }
+
+        data.riwayat.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            const nominalFormat = new Intl.NumberFormat('id-ID').format(item.nominal);
+            const tanda = item.tipe === 'in' ? '+' : '-';
+            const warna = item.tipe === 'in' ? 'color: green;' : 'color: red;';
+            
+            div.innerHTML = `
+                <span>${item.keterangan}</span>
+                <span style="font-weight: bold; ${warna}">${tanda} Rp ${nominalFormat}</span>
+            `;
+            historyContainer.appendChild(div);
+        });
+    }
+
+    // 4. Proses Tombol Simpan Transaksi
+    function prosesTransaksi() {
+        const ketInput = document.getElementById('inputKeterangan');
+        const nomInput = document.getElementById('inputNominal');
+        const tipeInput = document.getElementById('inputTipe');
+
+        const keterangan = ketInput.value.trim() || (tipeInput.value === 'in' ? 'Pemasukan' : 'Pengeluaran');
+        const nominal = parseFloat(nomInput.value);
+
+        if (isNaN(nominal) || nominal <= 0) {
+            alert('Masukkan nominal angka yang benar!');
+            return;
+        }
+
+        let dataAktif = ambilData();
+
+        if (tipeInput.value === 'in') {
+            dataAktif.saldo += nominal;
+        } else {
+            if (nominal > dataAktif.saldo) {
+                alert('Saldo tidak mencukupi untuk pengeluaran ini!');
+                return;
+            }
+            dataAktif.saldo -= nominal;
+        }
+
+        dataAktif.riwayat.unshift({
+            keterangan: keterangan,
+            nominal: nominal,
+            tipe: tipeInput.value
+        });
+
+        simpanData(dataAktif, true);
+        updateTampilan(dataAktif);
+
+        ketInput.value = '';
+        nomInput.value = '';
+    }
+
+    // 5. Sinkronisasi Real-Time Antar Tab / Browser
+    broadcastChannel.onmessage = function(event) {
+        if (event.data) {
+            updateTampilan(event.data);
+        }
+    };
+
+    window.addEventListener('storage', function(e) {
+        if (e.key === STORAGE_KEY && e.newValue) {
+            try {
+                const dataBaru = JSON.parse(e.newValue);
+                updateTampilan(dataBaru);
+            } catch (err) {}
+        }
+    });
+
+    // 6. Eksekusi Saat Halaman Dimuat / Direfresh
+    window.addEventListener('DOMContentLoaded', () => {
+        const dataAwal = ambilData();
+        updateTampilan(dataAwal);
+    });
+</script>
+
+</body>
+</html>
