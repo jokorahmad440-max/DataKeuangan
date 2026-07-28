@@ -37,7 +37,7 @@
             position: relative;
         }
 
-        /* Posisi Tombol Versi 1 & 2 di Luar (Sesuai Panah Merah) */
+        /* Tombol Versi di Luar (Kiri Atas) */
         .external-version-menu {
             position: absolute;
             top: 40px;
@@ -147,19 +147,26 @@
             align-items: center;
         }
         .hidden { display: none !important; }
-        .version-box {
-            background: rgba(0, 123, 255, 0.1);
-            padding: 10px;
-            border-radius: 5px;
+        
+        /* Kotak Grafik Fluktuasi Versi 1 */
+        .chart-box {
+            background: rgba(0, 123, 255, 0.05);
+            border: 1px dashed #007bff;
+            padding: 15px;
+            border-radius: 6px;
             margin-bottom: 15px;
-            font-size: 13px;
             text-align: center;
+        }
+        svg.flame-chart {
+            width: 100%;
+            height: 100px;
+            overflow: visible;
         }
     </style>
 </head>
 <body>
 
-    <!-- Menu Versi 1 & 2 di Luar (Sesuai Panah Merah) -->
+    <!-- Menu Versi 1 & 2 di Luar -->
     <div class="external-version-menu" id="externalMenu">
         <button id="btnVer1" class="btn-external-version active" onclick="pilihVersi(1)">Versi 1</button>
         <button id="btnVer2" class="btn-external-version" onclick="pilihVersi(2)">Versi 2</button>
@@ -194,38 +201,42 @@
         
         <div class="saldo-box" id="displaySaldo">Rp 0</div>
 
-        <!-- TAMPILAN VERSI 1: FLUKTUASI -->
-        <div id="versi1Box" class="version-box">
-            📊 <b>Analisis Fluktuasi:</b> <span id="infoFluktuasi">Stabil</span>
+        <!-- TAMPILAN VERSI 1: GRAFIK FLUKTUASI (TANPA MENU INPUT) -->
+        <div id="versi1Content">
+            <div class="chart-box">
+                <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold;">📈 Grafik Fluktuasi Keuangan</p>
+                <svg class="flame-chart" id="fluctuationSvg" viewBox="0 0 300 100">
+                    <!-- Garis fluktuasi digambar via JavaScript -->
+                </svg>
+                <p id="flunctuationText" style="margin: 8px 0 0 0; font-size: 12px; color: #666;">Belum ada fluktuasi data</p>
+            </div>
         </div>
 
-        <!-- TAMPILAN VERSI 2: RINGKASAN MASUK/KELUAR -->
-        <div id="versi2Box" class="version-box hidden">
-            📥 Masuk: <span id="totalMasuk" style="color: green; font-weight: bold;">Rp 0</span><br>
-            📤 Keluar: <span id="totalKeluar" style="color: red; font-weight: bold;">Rp 0</span>
+        <!-- TAMPILAN VERSI 2: MENU INPUT & RIWAYAT LENGKAP -->
+        <div id="versi2Content" class="hidden">
+            <div class="form-group">
+                <label>Keterangan</label>
+                <input type="text" id="inputKeterangan" placeholder="Contoh: Gaji / Belanja">
+            </div>
+            <div class="form-group">
+                <label>Nominal (Rp)</label>
+                <input type="number" id="inputNominal" placeholder="Contoh: 50000">
+            </div>
+            <div class="form-group">
+                <label>Tipe Transaksi</label>
+                <select id="inputTipe">
+                    <option value="in">Pemasukan (+)</option>
+                    <option value="out">Pengeluaran (-)</option>
+                </select>
+            </div>
+            <button onclick="tambahTransaksi()">Simpan Transaksi</button>
         </div>
 
-        <!-- FORM TRANSAKSI -->
-        <div class="form-group">
-            <label>Keterangan</label>
-            <input type="text" id="inputKeterangan" placeholder="Contoh: Gaji / Belanja">
-        </div>
-        <div class="form-group">
-            <label>Nominal (Rp)</label>
-            <input type="number" id="inputNominal" placeholder="Contoh: 50000">
-        </div>
-        <div class="form-group">
-            <label>Tipe Transaksi</label>
-            <select id="inputTipe">
-                <option value="in">Pemasukan (+)</option>
-                <option value="out">Pengeluaran (-)</option>
-            </select>
-        </div>
-        <button onclick="tambahTransaksi()">Simpan Transaksi</button>
-
-        <!-- RIWAYAT TRANSAKSI -->
-        <div class="history-list" id="historyList">
-            <div style="color: #888; text-align: center; font-size: 13px;">Belum ada transaksi</div>
+        <!-- RIWAYAT TRANSAKSI (Hanya muncul di Versi 2) -->
+        <div class="history-list hidden" id="historyListContainer">
+            <div id="historyList">
+                <div style="color: #888; text-align: center; font-size: 13px;">Belum ada transaksi</div>
+            </div>
         </div>
     </div>
 </div>
@@ -315,19 +326,22 @@
     function pilihVersi(v) {
         const btn1 = document.getElementById('btnVer1');
         const btn2 = document.getElementById('btnVer2');
-        const box1 = document.getElementById('versi1Box');
-        const box2 = document.getElementById('versi2Box');
+        const ver1Content = document.getElementById('versi1Content');
+        const ver2Content = document.getElementById('versi2Content');
+        const historyContainer = document.getElementById('historyListContainer');
 
         if (v === 1) {
             btn1.classList.add('active');
             btn2.classList.remove('active');
-            box1.classList.remove('hidden');
-            box2.classList.add('hidden');
+            ver1Content.classList.remove('hidden');
+            ver2Content.classList.add('hidden');
+            historyContainer.classList.add('hidden');
         } else {
             btn2.classList.add('active');
             btn1.classList.remove('active');
-            box2.classList.remove('hidden');
-            box1.classList.add('hidden');
+            ver2Content.classList.remove('hidden');
+            ver1Content.classList.add('hidden');
+            historyContainer.classList.remove('hidden');
         }
     }
 
@@ -410,21 +424,10 @@
             style: 'currency', currency: 'IDR', maximumFractionDigits: 0
         }).format(appData.saldo);
 
-        let totalIn = 0;
-        let totalOut = 0;
-        appData.riwayat.forEach(item => {
-            if (item.tipe === 'in') totalIn += item.nominal;
-            else totalOut += item.nominal;
-        });
+        // Render Grafik Fluktuasi di Versi 1
+        renderFluktuasiChart();
 
-        document.getElementById('totalMasuk').innerText = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', maximumFractionDigits: 0}).format(totalIn);
-        document.getElementById('totalKeluar').innerText = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', maximumFractionDigits: 0}).format(totalOut);
-
-        let fluktuasiText = "Stabil ➡️";
-        if (totalIn > totalOut) fluktuasiText = "Naik / Surplus 📈";
-        else if (totalOut > totalIn) fluktuasiText = "Menurun / Defisit 📉";
-        document.getElementById('infoFluktuasi').innerText = fluktuasiText;
-
+        // Render Riwayat di Versi 2
         const listContainer = document.getElementById('historyList');
         listContainer.innerHTML = '';
 
@@ -446,6 +449,76 @@
             `;
             listContainer.appendChild(div);
         });
+    }
+
+    function renderFluktuasiChart() {
+        const svg = document.getElementById('fluctuationSvg');
+        const textInfo = document.getElementById('flunctuationText');
+        svg.innerHTML = '';
+
+        if (!appData.riwayat || appData.riwayat.length === 0) {
+            textInfo.innerText = "Belum ada fluktuasi data";
+            return;
+        }
+
+        // Ambil data riwayat secara kronologis (dari lama ke baru) untuk grafik
+        const dataReversed = [...appData.riwayat].reverse();
+        let points = [];
+        let runningSaldo = appData.saldo;
+
+        // Hitung ulang saldo bertahap untuk titik-titik grafik
+        let tempVals = [];
+        let currentS = appData.saldo;
+        // Hitung mundur untuk merekonstruksi jejak saldo
+        for(let i = appData.riwayat.length - 1; i >= 0; i--) {
+            let tr = appData.riwayat[i];
+            if(tr.tipe === 'in') currentS -= tr.nominal;
+            else currentS += tr.nominal;
+        }
+        
+        let traceSaldo = currentS;
+        let valList = [traceSaldo];
+        appData.riwayat.slice().reverse().forEach(tr => {
+            if(tr.tipe === 'in') traceSaldo += tr.nominal;
+            else traceSaldo -= tr.nominal;
+            valList.push(traceSaldo);
+        });
+
+        let minV = Math.min(...valList);
+        let maxV = Math.max(...valList);
+        let rangeV = maxV - minV || 1;
+
+        let width = 300;
+        let height = 80;
+        let stepX = width / Math.max(valList.length - 1, 1);
+
+        let ptsString = "";
+        valList.forEach((val, idx) => {
+            let cx = idx * stepX;
+            let cy = height - ((val - minV) / rangeV) * height + 10;
+            points.push({x: cx, y: cy});
+            ptsString += `${cx},${cy} `;
+        });
+
+        // Buat elemen garis SVG (Polyline)
+        let polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+        polyline.setAttribute('points', ptsString);
+        polyline.setAttribute('fill', 'none');
+        polyline.setAttribute('stroke', '#007bff');
+        polyline.setAttribute('stroke-width', '3');
+        svg.appendChild(polyline);
+
+        // Buat titik-titik lingkaran pada garis
+        points.forEach(pt => {
+            let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', pt.x);
+            circle.setAttribute('cy', pt.y);
+            circle.setAttribute('r', '4');
+            circle.setAttribute('fill', '#007bff');
+            svg.appendChild(circle);
+        });
+
+        textInfo.innerText = `Fluktuasi Aktif (${valList.length} Titik Perubahan)`;
     }
 </script>
 
