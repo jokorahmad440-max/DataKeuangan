@@ -98,19 +98,29 @@
             border-bottom: 1px solid var(--history-border);
             padding-bottom: 10px;
         }
-        .nav-tabs {
+        /* Pemisahan Versi 1 & 2 menjadi tombol terpisah */
+        .version-container {
             display: flex;
-            gap: 5px;
+            flex-direction: column;
+            gap: 8px;
             margin-bottom: 15px;
         }
-        .nav-tabs button {
-            flex: 1;
-            padding: 8px;
-            font-size: 13px;
-            background-color: #555;
+        .btn-version {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 2px solid #007bff;
+            background-color: transparent;
+            color: #007bff;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
         }
-        .nav-tabs button.active {
+        .btn-version.active {
             background-color: #007bff;
+            color: white;
         }
         .history-list {
             margin-top: 20px;
@@ -169,10 +179,10 @@
         
         <div class="saldo-box" id="displaySaldo">Rp 0</div>
 
-        <!-- Tombol Pemisah Versi 1 & Versi 2 -->
-        <div class="nav-tabs">
-            <button id="btnVer1" class="active" onclick="pilihVersi(1)">Versi 1 (Fluktuasi)</button>
-            <button id="btnVer2" onclick="pilihVersi(2)">Versi 2 (Masuk/Keluar)</button>
+        <!-- Tombol Pemisah Versi 1 & Versi 2 yang Terpisah -->
+        <div class="version-container">
+            <button id="btnVer1" class="btn-version active" onclick="pilihVersi(1)">Versi 1</button>
+            <button id="btnVer2" class="btn-version" onclick="pilihVersi(2)">Versi 2</button>
         </div>
 
         <!-- TAMPILAN VERSI 1: FLUKTUASI -->
@@ -221,16 +231,19 @@
         }
     });
 
-    const STORAGE_KEY = 'dompet_vzqaajoko_data_v2';
+    const STORAGE_KEY = 'dompet_vzqaajoko_permanent_data';
     const THEME_KEY = 'dompet_theme_mode';
     const LOGIN_KEY = 'dompet_is_logged_in';
+    const SYNC_CHANNEL = 'dompet_sync_channel_v1';
+    
+    const broadcastChannel = new BroadcastChannel(SYNC_CHANNEL);
 
     let appData = {
         saldo: 0,
         riwayat: []
     };
 
-    // Cek Status Login, Tema, & Data saat Halaman Dimuat
+    // Muat data permanen saat halaman dibuka / direfresh
     window.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem(THEME_KEY);
         if (savedTheme === 'dark') {
@@ -243,12 +256,24 @@
             document.getElementById('appSection').classList.remove('hidden');
         }
 
-        const dataLocal = localStorage.getItem(STORAGE_KEY);
-        if (dataLocal) {
-            appData = JSON.parse(dataLocal);
-        }
+        muatDataDariStorage();
         updateUI();
     });
+
+    function muatDataDariStorage() {
+        try {
+            const dataLocal = localStorage.getItem(STORAGE_KEY);
+            if (dataLocal) {
+                const parsed = JSON.parse(dataLocal);
+                appData = {
+                    saldo: typeof parsed.saldo === 'number' ? parsed.saldo : 0,
+                    riwayat: Array.isArray(parsed.riwayat) ? parsed.riwayat : []
+                };
+            }
+        } catch (err) {
+            appData = { saldo: 0, riwayat: [] };
+        }
+    }
 
     function login() {
         const user = document.getElementById('inputUser').value.trim();
@@ -258,6 +283,7 @@
             localStorage.setItem(LOGIN_KEY, 'true');
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('appSection').classList.remove('hidden');
+            muatDataDariStorage();
             updateUI();
         } else {
             alert('Username atau PIN salah! Gunakan vzqaajoko dan 0000');
@@ -307,6 +333,8 @@
             return;
         }
 
+        muatDataDariStorage(); // Ambil data terbaru agar sinkron
+
         if (tipe === 'out' && nom > appData.saldo) {
             alert('Saldo tidak mencukupi!');
             return;
@@ -325,13 +353,14 @@
             tipe: tipe
         });
 
-        simpanDanUpdate();
+        simpanDanBroadcast();
         
         document.getElementById('inputKeterangan').value = '';
         document.getElementById('inputNominal').value = '';
     }
 
     function hapusTransaksi(id) {
+        muatDataDariStorage();
         const index = appData.riwayat.findIndex(item => item.id === id);
         if (index !== -1) {
             const item = appData.riwayat[index];
@@ -341,14 +370,33 @@
                 appData.saldo += item.nominal;
             }
             appData.riwayat.splice(index, 1);
-            simpanDanUpdate();
+            simpanDanBroadcast();
         }
     }
 
-    function simpanDanUpdate() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    function simpanDanBroadcast() {
+        const dataString = JSON.stringify(appData);
+        localStorage.setItem(STORAGE_KEY, dataString);
+        broadcastChannel.postMessage(appData);
         updateUI();
     }
+
+    // Sinkronisasi otomatis antar browser / tab secara real-time
+    broadcastChannel.onmessage = function(event) {
+        if (event.data) {
+            appData = event.data;
+            updateUI();
+        }
+    };
+
+    window.addEventListener('storage', function(e) {
+        if (e.key === STORAGE_KEY && e.newValue) {
+            try {
+                appData = JSON.parse(e.newValue);
+                updateUI();
+            } catch (err) {}
+        }
+    });
 
     function updateUI() {
         document.getElementById('displaySaldo').innerText = new Intl.NumberFormat('id-ID', {
@@ -373,7 +421,7 @@
         const listContainer = document.getElementById('historyList');
         listContainer.innerHTML = '';
 
-        if (appData.riwayat.length === 0) {
+        if (!appData.riwayat || appData.riwayat.length === 0) {
             listContainer.innerHTML = '<div style="color: #888; text-align: center; font-size: 13px;">Belum ada transaksi</div>';
             return;
         }
