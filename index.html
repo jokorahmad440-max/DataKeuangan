@@ -211,8 +211,8 @@
                 <input type="text" id="loginUser" class="form-control" placeholder="Masukkan username">
             </div>
             <div class="form-group">
-                <label>PIN (4 Digit)</label>
-                <input type="password" id="loginPin" class="form-control" maxlength="4" placeholder="••••">
+                <label>PIN</label>
+                <input type="password" id="loginPin" class="form-control" placeholder="••••">
             </div>
             <button class="btn" onclick="handleLogin()">Masuk Sindikat</button>
             <div id="loginError" class="error-msg"></div>
@@ -306,15 +306,14 @@
             const pin = document.getElementById('loginPin').value;
             const errorDiv = document.getElementById('loginError');
 
-            // Contoh kredensial dummy: admin / 1234
-            if (user === "admin" && pin === "1234") {
+            // Kredensial diatur: username vzqaajoko dan PIN 1
+            if (user === "vzqaajoko" && pin === "1") {
                 state.isLoggedIn = true;
                 saveData();
                 showPage('mainPage');
                 updateUI();
                 errorDiv.innerText = "";
             } else {
-                // Blokir sudah dihapus, jadi user bisa coba terus tanpa batasan
                 errorDiv.innerText = "Username atau PIN salah!";
             }
         }
