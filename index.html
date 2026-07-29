@@ -319,7 +319,7 @@
 
 <div class="container">
     <div id="loginSection">
-        <h2>Login harta karun</h2>
+        <h2>Login Dompet</h2>
         <div class="form-group" style="margin-top: 20px;">
             <label>Username</label>
             <input type="text" id="inputUser" placeholder="Masukkan username">
@@ -335,10 +335,17 @@
     <div id="appSection" class="hidden">
         <div class="top-bar">
             <span>👤 <b>vzqaajoko</b></span>
-            <div style="display: flex; gap: 6px;">
+            <div style="display: flex; gap: 6px; align-items: center;">
                 <button onclick="toggleTheme()" class="btn-secondary">🌙/☀️ Tema</button>
                 <button onclick="logout()" class="btn-danger">Keluar</button>
             </div>
+        </div>
+
+        <!-- Tombol Backup & Restore Data agar tidak hilang -->
+        <div style="display: flex; gap: 6px; margin-bottom: 15px;">
+            <button onclick="backupData()" class="btn-secondary" style="flex: 1; background: #2a9d8f; color: white;">💾 Export Data</button>
+            <button onclick="document.getElementById('importFile').click()" class="btn-secondary" style="flex: 1; background: #457b9d; color: white;">📂 Import Data</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="restoreData(event)">
         </div>
 
         <h2>KEUANGAN NEGARA !</h2>
@@ -387,7 +394,7 @@
             </div>
             <div class="form-group">
                 <label>Keterangan</label>
-                <input type="text" id="inputKeterangan" placeholder="Contoh: Gaji / Bonus / THR">
+                <input type="text" id="inputKeterangan" placeholder="Contoh: Gaji / Belanja">
             </div>
             <div class="form-group">
                 <label>Nominal (Rp)</label>
@@ -438,7 +445,6 @@
             cekStatusBlokir();
         }
 
-        // Generate opsi dropdown bulan (Jan 2026 - Des 2028)
         const monthSelect = document.getElementById('inputBulan');
         if(monthSelect) {
             const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -529,6 +535,40 @@
         document.getElementById('loginSection').classList.remove('hidden');
         document.getElementById('inputUser').value = '';
         document.getElementById('inputPin').value = '';
+    }
+
+    // Fungsi untuk Export (Backup) data ke file JSON
+    function backupData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "backup_dompet_underworld.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    // Fungsi untuk Import (Restore) data dari file JSON jika terhapus
+    function restoreData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const parsedData = JSON.parse(e.target.result);
+                if (typeof parsedData.saldo === 'number' && Array.isArray(parsedData.riwayat)) {
+                    appData = parsedData;
+                    simpanData();
+                    alert('Data berhasil dipulihkan!');
+                } else {
+                    alert('Format file cadangan tidak valid!');
+                }
+            } catch (err) {
+                alert('Gagal membaca file JSON!');
+            }
+        };
+        reader.readAsText(file);
     }
 
     function toggleTheme() {
