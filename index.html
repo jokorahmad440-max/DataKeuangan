@@ -31,9 +31,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // --- KONFIGURASI FIREBASE ANDA (Ganti dengan data project Anda) ---
+        // --- GANTI BAGIAN INI DENGAN CONFIG FIREBASE ASLI ANDA ---
         const firebaseConfig = {
             apiKey: "MASUKKAN_API_KEY_ANDA",
             authDomain: "MASUKKAN_AUTH_DOMAIN_ANDA",
@@ -57,7 +57,7 @@
             
             if (user) {
                 currentUserEmail = user.email;
-                document.getElementById('user-info').innerText = `Login sebagai: ${currentUserEmail}`;
+                document.getElementById('user-info').innerText = `Login: ${currentUserEmail}`;
                 loginScreen.classList.add('hidden');
                 appScreen.classList.remove('hidden');
                 muatData();
@@ -72,13 +72,11 @@
             const userInp = document.getElementById('username-inp').value.trim();
             const passInp = document.getElementById('pass-inp').value.trim();
 
-            // Karena Firebase Auth berbasis email, kita mapping username khusus Anda ke email sistem
             if (userInp === 'vzqaajoko' && passInp === '1') {
                 try {
-                    // Anda harus mendaftarkan email dummy ini sekali di Firebase Authentication: vzqaajoko@app.com / 1
                     await signInWithEmailAndPassword(auth, 'vzqaajoko@app.com', '1');
                 } catch (e) {
-                    alert('Gagal login manual. Pastikan akun "vzqaajoko@app.com" dengan password "1" sudah dibuat di Firebase Auth Anda.');
+                    alert('Gagal login manual. Pastikan akun "vzqaajoko@app.com" dengan password "1" sudah dibuat di Firebase Authentication Anda.');
                 }
             } else {
                 alert('Username atau Password salah!');
@@ -104,7 +102,7 @@
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         }
 
-        // Muat Data Khusus User yang Sedang Login (Permanen di Cloud)
+        // Muat Data Khusus User yang Sedang Login
         async function muatData() {
             const elemenRiwayat = document.getElementById('riwayat-list');
             const elemenSaldo = document.getElementById('total-saldo');
@@ -196,7 +194,6 @@
 </head>
 <body class="bg-slate-900 font-sans text-slate-800 flex justify-center items-center min-h-screen">
 
-    <!-- KONTAINER UTAMA -->
     <div class="w-full max-w-md bg-white min-h-screen sm:min-h-[650px] sm:rounded-2xl shadow-2xl flex flex-col justify-between overflow-hidden">
         
         <!-- HALAMAN LOGIN -->
@@ -232,10 +229,9 @@
             </button>
         </div>
 
-        <!-- HALAMAN UTAMA APLIKASI (Tersembunyi sebelum login) -->
+        <!-- HALAMAN UTAMA APLIKASI -->
         <div id="app-screen" class="hidden flex flex-col flex-1 justify-between">
             
-            <!-- Header Saldo -->
             <div class="bg-slate-900 text-white p-6 rounded-b-3xl shadow-md">
                 <div class="flex justify-between items-center mb-2">
                     <span id="user-info" class="text-xs text-slate-400 truncate max-w-[200px]"></span>
@@ -245,7 +241,6 @@
                 <h2 id="total-saldo" class="text-3xl font-bold mt-1">Rp 0</h2>
             </div>
 
-            <!-- Konten Form & Riwayat -->
             <div class="p-6 flex-1 overflow-y-auto">
                 <h3 class="font-semibold text-slate-700 mb-3 text-sm">Tambah Transaksi</h3>
                 
@@ -265,12 +260,9 @@
                 </div>
 
                 <h3 class="font-semibold text-slate-700 mb-3 text-sm">Riwayat Transaksi Cloud</h3>
-                <div id="riwayat-list" class="space-y-2">
-                    <!-- Data dimuat dinamis -->
-                </div>
+                <div id="riwayat-list" class="space-y-2"></div>
             </div>
 
-            <!-- Footer -->
             <div class="p-4 text-center text-xs text-slate-400 border-t">
                 Sistem Keamanan Aktif &bull; Data Cloud Permanen
             </div>
