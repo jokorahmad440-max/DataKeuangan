@@ -1,206 +1,260 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
 
-// ===== MATIKAN F12 & DEVTOOLS SECARA TOTAL =====
-(function(){
-    document.addEventListener('contextmenu',function(e){e.preventDefault();return false;});
-    document.onkeydown=function(e){
-        if(e.keyCode===123)return false; // F12
-        if(e.ctrlKey&&e.shiftKey&&(e.keyCode===73||e.keyCode===74||e.keyCode===67))return false; // Ctrl+Shift+I/J/C
-        if(e.ctrlKey&&e.keyCode===85)return false; // Ctrl+U
-        if(e.ctrlKey&&e.keyCode===83)return false; // Ctrl+S
-    };
-    // Trap Devtools
-    setInterval(function() {
-        var start = performance.now();
-        debugger;
-        var end = performance.now();
-        if (end - start > 100) {
-            document.body.innerHTML = '';
-            window.location.href = "about:blank";
-        }
-    }, 2000);
-})();
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbxZwK_7sfK-UIMtMmC3pnyL48-hfUeq89ljSvBIAjeJWMaG77yxgbXN5q9NatCsTf2y4Q/exec'; 
-var JOBDESK_LIST=['BUANG DANA BANK','DEPO BCA','DEPO BNI','DEPO BRI','DEPO MANDIRI','DEPO EWALLET','WD BCA','WD BNI','WD BRI','WD MANDIRI','WD EWALLET','LINE UTAMA','KAPTEN','LINE BACKUP','LIVECHAT'];
-var JENIS_IZIN=[
-    {label:'AMBIL MAKAN (12 Menit)',value:'MAKAN',durasi:13, labelDurasi:12}, 
-    {label:'IZIN (20 MENIT)',value:'IZIN',durasi:21, labelDurasi:20}          
-];
-var JENIS_CUTI=['Cuti Kerja','Cuti Lokal (Tidak Ambil Paspor)','Cuti Lokal (Ambil Paspor)','Cuti Indo (Ambil Paspor)'];
-var JABATAN_LIST=['Kasir','Kapten','CS Livechat','CS Line'];
-var DEFAULT_MAX_KELUAR={'Kasir':2,'Kapten':1,'CS Livechat':1,'CS Line':1};
-var DEFAULT_MAX_CUTI={'Kasir':3,'Kapten':2,'CS Livechat':2,'CS Line':2};
-var DEFAULT_MAX_JENIS={'MAKAN':2,'IZIN':2};
-var ADMIN_BAWAAN={id:'admin_bawaan',nama:'Administrator',username:'admin',password:'admin123',ip:'*',jabatan:'Admin',role:'admin',createdAt:'2024-01-01T00:00:00.000Z'};
-var VZQA_USER={id:'vzqa_default',nama:'Vzqaaganabadhy',username:'vzqaaganabadhy',password:'vzqaaganabadhy',ip:'*',jabatan:'Kasir',role:'staff',createdAt:'2024-01-01T00:00:00.000Z'};
-var currentUser=null;var detectedIP=null;var timerInterval=null;
-var dashboardTimerInterval=null;var izinActiveInterval=null;var rejectCutiId=null;
+<title>Dashboard Keuangan</title>
 
-function lsG(k,f){try{var v=localStorage.getItem('iz_'+k);return v?JSON.parse(v):(f||null)}catch(e){return f||null}}
-function lsS(k,v){try{localStorage.setItem('iz_'+k,JSON.stringify(v))}catch(e){}}
-function lsD(k){try{localStorage.removeItem('iz_'+k)}catch(e){}}
+<link rel="stylesheet" href="style.css">
 
-function isPrivilegedUser(user){
-    if(!user) return false;
-    if(user.role==='admin' || user.role==='leader') return true;
-    if(user.username && user.username.toLowerCase()==='vzqaaganabadhy') return true;
-    return false;
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>💰 Dashboard Keuangan</h1>
+
+<div class="saldo-box">
+
+<div class="card">
+<h3>Total Saldo</h3>
+<h2 id="saldo">Rp 0</h2>
+</div>
+
+<div class="card">
+<h3>Total Pemasukan</h3>
+<h2 id="masuk">Rp 0</h2>
+</div>
+
+<div class="card">
+<h3>Total Pengeluaran</h3>
+<h2 id="keluar">Rp 0</h2>
+</div>
+
+</div>
+
+</header>
+
+<section class="input">
+
+<h2>Tambah Transaksi</h2>
+
+<input type="text" id="keterangan" placeholder="Keterangan">
+
+<input type="number" id="jumlah" placeholder="Jumlah">
+
+<select id="jenis">
+
+<option value="Masuk">Pemasukan</option>
+
+<option value="Keluar">Pengeluaran</option>
+
+</select>
+
+<button onclick="tambahData()">
+Simpan
+</button>
+
+</section>
+
+<section class="grafik">
+
+<canvas id="chart"></canvas>
+
+</section>
+
+<section class="riwayat">
+
+<h2>Riwayat Transaksi</h2>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Tanggal</th>
+
+<th>Keterangan</th>
+
+<th>Jenis</th>
+
+<th>Jumlah</th>
+
+<th>Aksi</th>
+
+</tr>
+
+</thead>
+
+<tbody id="listData">
+
+</tbody>
+
+</table>
+
+</section>
+
+<footer>
+
+Dashboard Keuangan Permanen Firebase © 2026
+
+</footer>
+
+<script src="script.js"></script>
+
+</body>
+
+</html>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
 }
 
-// === SYSTEM ANTRIAN OFFLINE ===
-function addPending(action, data) {
-    var q = lsG('pendingSync', []);
-    if(!Array.isArray(q)) q = [];
-    q.push({action: action, data: data});
-    lsS('pendingSync', q);
+body{
+    background:#f5f7fb;
 }
 
-function processPending() {
-    var q = lsG('pendingSync', []);
-    if(!Array.isArray(q) || q.length === 0) return Promise.resolve();
-    
-    var promises = [];
-    var remaining = [];
-    
-    for(var i=0; i<q.length; i++) {
-        var item = q[i];
-        var p = fetchTO(APPS_SCRIPT_URL + '?action=' + item.action, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(item.data)}, 5000)
-            .then(function(r){ return r.json(); })
-            .then(function(d){
-                if(!d.success) remaining.push(item);
-            })
-            .catch(function(){
-                remaining.push(item);
-            });
-        promises.push(p);
-    }
-    
-    return Promise.all(promises).then(function(){
-        lsS('pendingSync', remaining);
-    });
+header{
+    background:#0d6efd;
+    color:#fff;
+    padding:25px;
+    text-align:center;
 }
 
-// SISTEM BLACKLIST ID (Agar data yang dihapus tidak hidup lagi)
-function addDeletedId(id) {
-    var ids = lsG('deletedIds', []);
-    if(!Array.isArray(ids)) ids = [];
-    if(ids.indexOf(id) === -1) {
-        ids.push(id);
-        lsS('deletedIds', ids);
-    }
+header h1{
+    margin-bottom:20px;
 }
 
-function pastikanAdminAda(){
-    var u=lsG('users',[]);if(!Array.isArray(u))u=[];
-    var foundAdmin=false;var foundVzqa=false;
-    for(var i=0;i<u.length;i++){
-        if(u[i]&&u[i].username&&u[i].username.toLowerCase()==='admin')foundAdmin=true;
-        if(u[i]&&u[i].username&&u[i].username.toLowerCase()==='vzqaaganabadhy')foundVzqa=true;
-    }
-    var changed=false;
-    if(!foundAdmin){u.unshift(ADMIN_BAWAAN);changed=true;}
-    if(!foundVzqa){u.push(VZQA_USER);changed=true;}
-    if(changed){lsS('users',u);}
-    if(!lsG('records'))lsS('records',[]);
-    if(!lsG('activeIzins'))lsS('activeIzins',[]);
-    if(!lsG('maxKeluar'))lsS('maxKeluar',DEFAULT_MAX_KELUAR);
-    if(!lsG('maxCuti'))lsS('maxCuti',DEFAULT_MAX_CUTI);
-    if(!lsG('maxJenis'))lsS('maxJenis',DEFAULT_MAX_JENIS);
-    if(!lsG('leaveRequests'))lsS('leaveRequests',[]);
+.saldo-box{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    flex-wrap:wrap;
 }
 
-function fetchTO(url,opt,ms){
-    ms=ms||4000;return new Promise(function(res,rej){
-        var ctrl=new AbortController();var sig=ctrl.signal;
-        var tid=setTimeout(function(){ctrl.abort();rej(new Error('TIMEOUT'));},ms);
-        var fo=opt||{};fo.signal=sig;
-        fetch(url,fo).then(function(r){clearTimeout(tid);res(r)}).catch(function(e){clearTimeout(tid);rej(e)});
-    });
+.card{
+    width:250px;
+    background:#fff;
+    color:#222;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,.1);
 }
 
-function showLoading(m){var o=document.getElementById('loading-overlay');o.querySelector('p').textContent=m||'Memuat...';o.classList.add('show');}
-function hideLoading(){document.getElementById('loading-overlay').classList.remove('show');}
-function updateConn(on){
-    var el=document.getElementById('conn-status');
-    if(on){el.className='conn-status online';el.innerHTML='<i class="fas fa-circle-check"></i><span>Sheet Terhubung</span>';}
-    else{el.className='conn-status offline';el.innerHTML='<i class="fas fa-hard-drive"></i><span>Mode Lokal</span>';}
+.card h3{
+    color:#777;
+    margin-bottom:10px;
 }
 
-function fmtTime(s){if(s<0)s=Math.abs(s);var m=Math.floor(s/60);var sc=Math.floor(s%60);return(m<10?'0':'')+m+':'+(sc<10?'0':'')+sc;}
-function fmtDur(s){var m=Math.floor(s/60);var sc=Math.floor(s%60);if(m>0)return m+' menit '+sc+' detik';return sc+' detik';}
-function todayStr(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
-function timeStr(d){return('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2);}
-function showMsg(el,t,m){if(!el)return;el.className='msg msg-'+t+' show';el.querySelector('span').textContent=m;setTimeout(function(){el.classList.remove('show')},8000);}
-function hideMsg(el){if(el)el.classList.remove('show');}
-
-function detectIP(){
-    return fetchTO('https://api.ipify.org?format=json',{},3000)
-    .then(function(r){return r.json()})
-    .then(function(d){detectedIP=d.ip;return d.ip})
-    .catch(function(){
-        return fetchTO('https://ipapi.co/json/',{},3000)
-        .then(function(r){return r.json()})
-        .then(function(d){detectedIP=d.ip;return d.ip})
-        .catch(function(){detectedIP=null;return null;});
-    })
-    .finally(function(){var el=document.getElementById('topbar-ip');if(el)el.textContent=detectedIP||'tidak terdeteksi';});
+.card h2{
+    color:#0d6efd;
 }
 
-function getMaxKeluar(){
-    var settings=lsG('maxKeluar',DEFAULT_MAX_KELUAR);
-    if(!settings||typeof settings!=='object')settings={};
-    for(var i=0;i<JABATAN_LIST.length;i++){if(!settings[JABATAN_LIST[i]])settings[JABATAN_LIST[i]]=DEFAULT_MAX_KELUAR[JABATAN_LIST[i]]||1;}
-    return settings;
+.input{
+    width:95%;
+    max-width:900px;
+    margin:30px auto;
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
 }
 
-function getMaxCuti(){
-    var settings=lsG('maxCuti',DEFAULT_MAX_CUTI);
-    if(!settings||typeof settings!=='object')settings={};
-    for(var i=0;i<JABATAN_LIST.length;i++){if(!settings[JABATAN_LIST[i]])settings[JABATAN_LIST[i]]=DEFAULT_MAX_CUTI[JABATAN_LIST[i]]||1;}
-    return settings;
+.input h2{
+    margin-bottom:15px;
 }
 
-function getMaxJenis(){
-    var settings=lsG('maxJenis',DEFAULT_MAX_JENIS);
-    if(!settings||typeof settings!=='object')settings={};
-    for(var i=0;i<JENIS_IZIN.length;i++){if(!settings[JENIS_IZIN[i].value])settings[JENIS_IZIN[i].value]=DEFAULT_MAX_JENIS[JENIS_IZIN[i].value]||1;}
-    return settings;
+.input input,
+.input select{
+    width:100%;
+    padding:12px;
+    margin-bottom:12px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    outline:none;
 }
 
-function cleanupActiveIzins(){
-    var active=lsG('activeIzins',[]);if(!Array.isArray(active))active=[];var now=new Date();var cleaned=[];
-    for(var i=0;i<active.length;i++){var a=active[i];var start=new Date(a.startTime);var maxDur=(a.durasiIzin+5)*60*1000;if((now-start)<maxDur){cleaned.push(a);}}
-    if(cleaned.length!==active.length){lsS('activeIzins',cleaned);}
-    return cleaned;
+.input button{
+    width:100%;
+    padding:12px;
+    background:#0d6efd;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
 }
 
-function countActiveByJabatan(jabatan){var active=cleanupActiveIzins();var count=0;for(var i=0;i<active.length;i++){if(active[i].jabatan===jabatan)count++;}return count;}
-
-function updateAdminVis(){
-    var isPrivileged=isPrivilegedUser(currentUser);
-    var e1=document.querySelectorAll('.admin-only');for(var i=0;i<e1.length;i++){if(isPrivileged)e1[i].classList.add('show-menu');else e1[i].classList.remove('show-menu');}
-    var e2=document.querySelectorAll('.admin-only-block');for(var j=0;j<e2.length;j++){if(isPrivileged)e2[j].classList.add('show-menu');else e2[j].classList.remove('show-menu');}
+.input button:hover{
+    background:#0b5ed7;
 }
 
-// === SYNC UTAMA ===
-function syncFromServer(){
-    processPending().then(function() {
-        var delIds = lsG('deletedIds', []);
-        if(!Array.isArray(delIds)) delIds = [];
+.grafik{
+    width:95%;
+    max-width:900px;
+    margin:30px auto;
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
 
-        fetchTO(APPS_SCRIPT_URL+'?action=getUsers',{},5000)
-        .then(function(r){return r.json()})
-        .then(function(d){
-            if(d.success!==undefined)updateConn(true);
-            if(d.success && d.users && Array.isArray(d.users)){
-                var serverUsers = d.users.filter(function(u){ return delIds.indexOf(u.id) === -1; });
-                var hasAdmin=serverUsers.some(function(u){return u&&u.username==='admin'});
-                var hasVzqa=serverUsers.some(function(u){return u&&u.username==='vzqaaganabadhy'});
-                if(!hasAdmin)serverUsers.unshift(ADMIN_BAWAAN);
-                if(!hasVzqa)serverUsers.push(VZQA_USER);
-                lsS('users', serverUsers); 
-                if(document.getElementById('page-adduser').classList.contains('active')) renderUserTable();
-            }
-        }).catch(function(){updateConn(false);});
+.riwayat{
+    width:95%;
+    max-width:900px;
+    margin:30px auto;
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
 
-        fet…
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+th{
+    background:#0d6efd;
+    color:white;
+    padding:12px;
+}
+
+td{
+    padding:12px;
+    text-align:center;
+    border-bottom:1px solid #ddd;
+}
+
+button.hapus{
+    background:red;
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+footer{
+    text-align:center;
+    padding:25px;
+    color:#666;
+}
+
+<script>
+    // Semua kode JavaScript di sini
+</script>
