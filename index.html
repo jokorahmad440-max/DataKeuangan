@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureGuard - Login & Dashboard</title>
+    <title>SecureGuard - Login 2FA & Dashboard</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- FontAwesome -->
@@ -11,7 +11,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col select-none">
 
-    <!-- ================= SECTION: HALAMAN LOGIN ================= -->
+    <!-- ================= SECTION: HALAMAN LOGIN (TAHAP 1) ================= -->
     <div id="login-section" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl space-y-6">
             <div class="text-center space-y-2">
@@ -19,15 +19,15 @@
                     <i class="fa-solid fa-shield-halved text-2xl"></i>
                 </div>
                 <h2 class="text-xl font-bold tracking-tight">Otentikasi Keamanan</h2>
-                <p class="text-xs text-slate-400">Masukkan kredensial akses Anda untuk membuka dashboard.</p>
+                <p class="text-xs text-slate-400">Masukkan kredensial akses Anda (Tahap 1/2)</p>
             </div>
 
-            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+            <form id="login-form" onsubmit="handleLoginStep1(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1.5">Username</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-user text-xs"></i></span>
-                        <input type="text" id="username" required placeholder="vzqaa" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 pl-9 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
+                        <input type="text" id="username" required placeholder="admin" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 pl-9 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
                     </div>
                 </div>
 
@@ -39,13 +39,47 @@
                     </div>
                 </div>
 
-                <div id="error-msg" class="text-rose-400 text-xs text-center hidden font-medium">Username atau Password salah! </div>
+                <div id="error-msg" class="text-rose-400 text-xs text-center hidden font-medium">Username atau Password salah!</div>
 
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition shadow-lg shadow-emerald-900/20 cursor-pointer mt-2">
-                    Masuk ke Dashboard
+                    Lanjut Verifikasi 2FA
                 </button>
             </form>
             <p class="text-[10px] text-center text-slate-500">Hint Default: Username: <code class="text-slate-400">admin</code> | Password: <code class="text-slate-400">12345</code></p>
+        </div>
+    </div>
+
+
+    <!-- ================= SECTION: HALAMAN VERIFIKASI 2FA (TAHAP 2) ================= -->
+    <div id="otp-section" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <div class="inline-block bg-purple-500/10 text-purple-400 p-3 rounded-2xl border border-purple-500/20 mb-2">
+                    <i class="fa-solid fa-lock text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold tracking-tight">Verifikasi 2FA (OTP)</h2>
+                <p class="text-xs text-slate-400">Masukkan kode 6-digit keamanan Anda.</p>
+            </div>
+
+            <form onsubmit="handleLoginStep2(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Kode OTP (Contoh: 888999)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-shield-cat text-xs"></i></span>
+                        <input type="text" id="otp-code" maxlength="6" required placeholder="888999" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 pl-9 text-xs text-slate-100 tracking-widest font-mono text-center focus:outline-none focus:border-purple-500 transition">
+                    </div>
+                </div>
+
+                <div id="otp-error-msg" class="text-rose-400 text-xs text-center hidden font-medium">Kode OTP salah! (Gunakan: 888999)</div>
+
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition shadow-lg shadow-purple-900/20 cursor-pointer mt-2">
+                    Verifikasi & Masuk
+                </button>
+                <button type="button" onclick="backToLogin()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2 rounded-xl text-xs transition cursor-pointer">
+                    Kembali
+                </button>
+            </form>
+            <p class="text-[10px] text-center text-slate-500">Hint OTP Default: <code class="text-purple-400 font-mono">888999</code></p>
         </div>
     </div>
 
@@ -75,7 +109,6 @@
 
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full space-y-8">
-            <!-- Banner Skor Keamanan -->
             <section class="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
                 <div class="space-y-2 text-center md:text-left">
                     <span class="text-emerald-400 text-xs font-semibold tracking-wider uppercase bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">Status Perlindungan</span>
@@ -83,48 +116,24 @@
                     <p class="text-slate-400 text-sm max-w-xl">Semua parameter inti enkripsi dan kredensial Anda terpantau aman.</p>
                 </div>
                 <div class="flex items-center gap-4 bg-slate-950/60 border border-slate-800 p-4 rounded-2xl">
-                    <div class="text-3xl font-black text-emerald-400 font-mono">88%</div>
+                    <div class="text-3xl font-black text-emerald-400 font-mono">95%</div>
                     <div class="text-xs space-y-1">
                         <p class="text-slate-300 font-medium">Skor Keamanan</p>
-                        <p class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> 4 Sistem Aman</p>
+                        <p class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> 2FA Aktif</p>
                     </div>
                 </div>
             </section>
-
-            <!-- Modul Ringkas -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                    <div class="text-blue-400 mb-2"><i class="fa-solid fa-key text-lg"></i></div>
-                    <h3 class="font-semibold text-base">Password Manager</h3>
-                    <p class="text-xs text-slate-400 mt-1">Sandi Lemah: 1 Akun</p>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                    <div class="text-purple-400 mb-2"><i class="fa-solid fa-lock text-lg"></i></div>
-                    <h3 class="font-semibold text-base">Autentikasi 2FA</h3>
-                    <p class="text-xs text-slate-400 mt-1">Terlindungi: 12/13 Akun</p>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                    <div class="text-emerald-400 mb-2"><i class="fa-solid fa-hard-drive text-lg"></i></div>
-                    <h3 class="font-semibold text-base">Enkripsi Disk</h3>
-                    <p class="text-xs text-slate-400 mt-1">Status: Aktif (100%)</p>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                    <div class="text-cyan-400 mb-2"><i class="fa-solid fa-globe text-lg"></i></div>
-                    <h3 class="font-semibold text-base">Jaringan & VPN</h3>
-                    <p class="text-xs text-slate-400 mt-1">Status: Terputus</p>
-                </div>
-            </div>
         </main>
 
         <footer class="border-t border-slate-800/80 bg-slate-900/50 mt-12 py-6 text-center text-xs text-slate-500">
-            <p>Personal Security Dashboard &bull; Sesi Terproteksi</p>
+            <p>Personal Security Dashboard &bull; Sesi Terproteksi 2FA</p>
         </footer>
     </div>
 
 
-    <!-- ================= SCRIPT PENGAMAN & PENYIMPAN SESI ================= -->
+    <!-- ================= SCRIPT LOGIKA & 2FA ================= -->
     <script>
-        // Cek Sesi Saat Halaman Dimuat (Agar saat direfresh tidak logout)
+        // Cek Sesi Saat Dimuat
         window.addEventListener('DOMContentLoaded', () => {
             const isLogged = localStorage.getItem('secureguard_logged');
             if (isLogged === 'true') {
@@ -132,60 +141,78 @@
             }
         });
 
-        // Logika Login
-        function handleLogin(e) {
+        // Tahap 1: Validasi Username & Password
+        function handleLoginStep1(e) {
             e.preventDefault();
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
             const errorMsg = document.getElementById('error-msg');
 
-            if (user === 'admin' && pass === '1') {
-                // Simpan status login ke localStorage
-                localStorage.setItem('secureguard_logged', 'true');
-                showDashboard();
+            if (user === 'admin' && pass === '12345') {
+                errorMsg.classList.add('hidden');
+                // Pindah ke tampilan OTP
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('otp-section').classList.remove('hidden');
             } else {
                 errorMsg.classList.remove('hidden');
             }
         }
 
-        // Fungsi Tampilkan Dashboard
+        // Kembali dari halaman OTP ke Login
+        function backToLogin() {
+            document.getElementById('otp-section').classList.add('hidden');
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('otp-error-msg').classList.add('hidden');
+        }
+
+        // Tahap 2: Validasi Kode OTP
+        function handleLoginStep2(e) {
+            e.preventDefault();
+            const otpInput = document.getElementById('otp-code').value;
+            const otpError = document.getElementById('otp-error-msg');
+
+            // Kode OTP default: 888999
+            if (otpInput === '888999') {
+                localStorage.setItem('secureguard_logged', 'true');
+                document.getElementById('otp-section').classList.add('hidden');
+                showDashboard();
+            } else {
+                otpError.classList.remove('hidden');
+            }
+        }
+
+        // Tampilkan Dashboard
         function showDashboard() {
             document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('otp-section').classList.add('hidden');
             document.getElementById('dashboard-section').classList.remove('hidden');
             document.getElementById('dashboard-section').classList.add('flex');
         }
 
-        // Logika Logout (Menghapus status sesi)
+        // Logout
         function handleLogout() {
             localStorage.removeItem('secureguard_logged');
             document.getElementById('dashboard-section').classList.remove('flex');
             document.getElementById('dashboard-section').classList.add('hidden');
             document.getElementById('login-section').classList.remove('hidden');
             document.getElementById('password').value = '';
+            document.getElementById('otp-code').value = '';
             document.getElementById('error-msg').classList.add('hidden');
+            document.getElementById('otp-error-msg').classList.add('hidden');
         }
 
-        // Skrip Pengaman F12 & Inspeksi Elemen
-        document.addEventListener('contextmenu', function (e) {
-            e.preventDefault();
-        });
-
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'F12' || e.keyCode === 123) {
-                e.preventDefault();
-                return false;
-            }
-            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
-                e.preventDefault();
-                return false;
-            }
-            if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's')) {
+        // Pengaman
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12' || e.keyCode === 123 || 
+               (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c'].includes(e.key)) || 
+               (e.ctrlKey && ['U','u','S','s'].includes(e.key))) {
                 e.preventDefault();
                 return false;
             }
         });
 
-        // Jam Real-time
+        // Jam
         function updateClock() {
             const now = new Date();
             const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
