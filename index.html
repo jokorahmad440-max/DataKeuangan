@@ -3,209 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureGuard - Pemantau HP Sendiri</title>
+    <title>SecureChat - Dashboard Obrolan Teman</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col select-none">
+<body class="bg-slate-950 text-slate-100 font-sans antialiased h-screen flex flex-col overflow-hidden">
 
-    <!-- ================= SECTION: LOGIN ================= -->
+    <!-- ================= SECTION: HALAMAN LOGIN / NAMA PENGGUNA ================= -->
     <div id="login-section" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl space-y-6">
             <div class="text-center space-y-2">
                 <div class="inline-block bg-emerald-500/10 text-emerald-400 p-3 rounded-2xl border border-emerald-500/20 mb-2">
-                    <i class="fa-solid fa-mobile-screen-button text-2xl"></i>
+                    <i class="fa-solid fa-comments text-2xl"></i>
                 </div>
-                <h2 class="text-xl font-bold tracking-tight">Keamanan HP Saya</h2>
-                <p class="text-xs text-slate-400">Masukkan PIN untuk membuka dashboard perangkat.</p>
+                <h2 class="text-xl font-bold tracking-tight">Masuk ke Ruang Chat</h2>
+                <p class="text-xs text-slate-400">Masukkan nama panggilan Anda untuk mulai mengobrol.</p>
             </div>
 
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">PIN Keamanan</label>
-                    <input type="password" id="pin-input" maxlength="6" required placeholder="••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-sm text-slate-100 text-center tracking-widest focus:outline-none focus:border-emerald-500 transition">
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Nama Anda</label>
+                    <input type="text" id="username-input" required placeholder="Contoh: Budi, Siska..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
                 </div>
-                <div id="error-msg" class="text-rose-400 text-xs text-center hidden font-medium">PIN Salah! (Gunakan: 1234)</div>
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer">
-                    Buka Dashboard HP
+                    Mulai Chatting
                 </button>
             </form>
-            <p class="text-[10px] text-center text-slate-500">PIN Default: <code class="text-emerald-400 font-mono">1234</code></p>
         </div>
     </div>
 
-    <!-- ================= SECTION: DASHBOARD UTAMA ================= -->
-    <div id="dashboard-section" class="hidden flex-col min-h-screen">
-        <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-emerald-500/10 text-emerald-400 p-2.5 rounded-xl border border-emerald-500/20">
-                        <i class="fa-solid fa-mobile-screen text-xl"></i>
+
+    <!-- ================= SECTION: DASHBOARD CHAT UTAMA ================= -->
+    <div id="chat-dashboard" class="hidden flex flex-col h-full w-full max-w-5xl mx-auto border-x border-slate-800 bg-slate-900 shadow-2xl">
+        
+        <!-- Header Chat -->
+        <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center z-10">
+            <div class="flex items-center space-x-3">
+                <div class="relative">
+                    <div class="w-10 h-10 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-user-group"></i>
                     </div>
-                    <div>
-                        <h1 class="text-lg font-bold tracking-wide">Info HP <span class="text-emerald-400 text-xs uppercase px-2 py-0.5 bg-emerald-950 border border-emerald-800 rounded-full ml-1">Pribadi</span></h1>
-                        <p class="text-xs text-slate-400">Monitoring Sensor & Sistem Perangkat Ini</p>
-                    </div>
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
                 </div>
-                <button onclick="handleLogout()" class="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer">
-                    <i class="fa-solid fa-lock mr-1">Tutup</i>
+                <div>
+                    <h2 class="text-sm font-bold">Grup Obrolan Sahabat</h2>
+                    <p class="text-[10px] text-emerald-400 flex items-center gap-1">Online &bull; <span id="current-user-display" class="font-semibold"></span></p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button onclick="clearChat()" class="text-xs bg-slate-800 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 border border-slate-700 hover:border-rose-500/30 px-3 py-1.5 rounded-lg transition cursor-pointer" title="Hapus Riwayat Chat">
+                    <i class="fa-solid fa-trash-can mr-1"></i> Bersihkan
+                </button>
+                <button onclick="handleLogout()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg transition cursor-pointer">
+                    Ganti Nama
                 </button>
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
-            
-            <!-- Grid Informasi Real-Time HP Anda -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                
-                <!-- Info 1: Jenis Perangkat -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center space-x-4">
-                    <div class="bg-blue-500/10 text-blue-400 p-3 rounded-xl border border-blue-500/20">
-                        <i class="fa-solid fa-microchip text-xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-[11px] text-slate-400">Perangkat / OS</p>
-                        <h3 id="device-info" class="text-xs font-bold text-slate-100 mt-0.5">Memuat...</h3>
-                    </div>
-                </div>
+        <!-- Area Pesan (Chat Box) -->
+        <div id="chat-messages" class="flex-grow p-4 md:p-6 overflow-y-auto space-y-4 bg-slate-950/50">
+            <!-- Pesan akan masuk secara dinamis di sini -->
+        </div>
 
-                <!-- Info 2: Baterai HP -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center space-x-4">
-                    <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-xl border border-emerald-500/20">
-                        <i class="fa-solid fa-battery-half text-xl" id="battery-icon"></i>
-                    </div>
-                    <div>
-                        <p class="text-[11px] text-slate-400">Kondisi Baterai</p>
-                        <h3 id="battery-info" class="text-xs font-bold text-slate-100 mt-0.5">Memuat...</h3>
-                    </div>
-                </div>
-
-                <!-- Info 3: Status Koneksi Internet -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center space-x-4">
-                    <div class="bg-purple-500/10 text-purple-400 p-3 rounded-xl border border-purple-500/20">
-                        <i class="fa-solid fa-wifi text-xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-[11px] text-slate-400">Jaringan Internet</p>
-                        <h3 id="network-info" class="text-xs font-bold text-slate-100 mt-0.5">Online (Terhubung)</h3>
-                    </div>
-                </div>
-
-                <!-- Info 4: Resolusi Layar HP -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center space-x-4">
-                    <div class="bg-cyan-500/10 text-cyan-400 p-3 rounded-xl border border-cyan-500/20">
-                        <i class="fa-solid fa-expand text-xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-[11px] text-slate-400">Resolusi Layar</p>
-                        <h3 id="screen-info" class="text-xs font-bold text-slate-100 mt-0.5">Memuat...</h3>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Panel Tambahan: Cek Keamanan Mandiri -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-                <h3 class="font-bold text-sm text-slate-200"><i class="fa-solid fa-shield-halved text-emerald-400 mr-2"></i>Panduan Cek Cepat Keamanan HP Anda</h3>
-                <ul class="text-xs text-slate-400 space-y-2 list-disc list-inside">
-                    <li>Pastikan kunci layar HP Anda menggunakan Sandi/Biometrik (Sidik Jari/Wajah).</li>
-                    <li>Periksa berkala menu <strong class="text-slate-200">Pengaturan > Google > Perangkat & Berbagi</strong> untuk memastikan tidak ada perangkat asing yang menaut ke akun Anda.</li>
-                    <li>Hindari menginstal aplikasi di luar Play Store / App Store resmi.</li>
-                </ul>
-            </div>
-
-        </main>
-
-        <footer class="border-t border-slate-800/80 bg-slate-900/50 mt-12 py-6 text-center text-xs text-slate-500">
-            <p>Monitor Hardware &bull; Berjalan Lokal di HP Anda</p>
+        <!-- Form Kirim Pesan -->
+        <footer class="bg-slate-900 border-t border-slate-800 p-4">
+            <form onsubmit="sendMessage(event)" class="flex gap-2">
+                <input type="text" id="message-input" required placeholder="Tulis pesan ke teman..." class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold px-5 py-3 rounded-xl text-xs transition flex items-center justify-center cursor-pointer">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
         </footer>
+
     </div>
 
-    <!-- ================= SCRIPT PENDETEKSI HP ================= -->
+
+    <!-- ================= SCRIPT LOGIKA CHAT ================= -->
     <script>
+        let currentUser = "";
+
         window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('myphone_logged') === 'true') {
+            const savedUser = localStorage.getItem('chat_username');
+            if (savedUser) {
+                currentUser = savedUser;
                 showDashboard();
             }
-            loadPhoneSpecs();
         });
 
         function handleLogin(e) {
             e.preventDefault();
-            const pin = document.getElementById('pin-input').value;
-            if (pin === '1234') {
-                localStorage.setItem('myphone_logged', 'true');
+            const nameInput = document.getElementById('username-input').value.trim();
+            if (nameInput) {
+                currentUser = nameInput;
+                localStorage.setItem('chat_username', currentUser);
                 showDashboard();
-            } else {
-                document.getElementById('error-msg').classList.remove('hidden');
             }
         }
 
         function showDashboard() {
             document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('dashboard-section').classList.remove('hidden');
-            document.getElementById('dashboard-section').classList.add('flex');
+            const dashboard = document.getElementById('chat-dashboard');
+            dashboard.classList.remove('hidden');
+            dashboard.classList.add('flex');
+            document.getElementById('current-user-display').innerText = currentUser;
+            
+            renderMessages();
+            // Cek pesan baru secara otomatis setiap 1 detik dari localStorage
+            setInterval(renderMessages, 1000);
         }
 
         function handleLogout() {
-            localStorage.removeItem('myphone_logged');
+            localStorage.removeItem('chat_username');
             location.reload();
         }
 
-        // Fungsi Otomatis Membaca Spesifikasi & Status HP
-        async function loadPhoneSpecs() {
-            // 1. Deteksi Browser & OS (Jenis HP)
-            const ua = navigator.userAgent;
-            let os = "Perangkat Lain";
-            if (/android/i.test(ua)) os = "Android Phone";
-            else if (/iphone|ipad|ipod/i.test(ua)) os = "iPhone / iOS";
-            else if (/windows/i.test(ua)) os = "Windows PC";
+        // Kirim Pesan
+        function sendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            const newMessage = {
+                sender: currentUser,
+                text: text,
+                time: timeNow
+            };
+
+            // Ambil riwayat chat lama dari localStorage
+            let messages = JSON.parse(localStorage.getItem('chat_history')) || [];
+            messages.push(newMessage);
+            localStorage.setItem('chat_history', JSON.stringify(messages));
+
+            input.value = '';
+            renderMessages();
+        }
+
+        // Tampilkan Pesan ke Layar
+        function renderMessages() {
+            const chatContainer = document.getElementById('chat-messages');
+            const messages = JSON.parse(localStorage.getItem('chat_history')) || [];
             
-            document.getElementById('device-info').innerText = os;
+            // Cek apakah user sedang berada di bawah agar scroll otomatis pas ada pesan baru
+            const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop <= chatContainer.clientHeight + 50;
 
-            // 2. Deteksi Resolusi Layar HP
-            document.getElementById('screen-info').innerText = window.innerWidth + " x " + window.innerHeight + " px";
-
-            // 3. Deteksi Status Baterai HP (Jika didukung browser HP)
-            if ('getBattery' in navigator) {
-                try {
-                    const battery = await navigator.getBattery();
-                    updateBatteryStatus(battery);
-                    battery.addEventListener('levelchange', () => updateBatteryStatus(battery));
-                    battery.addEventListener('chargingchange', () => updateBatteryStatus(battery));
-                } catch (err) {
-                    document.getElementById('battery-info').innerText = "Tidak tersedia";
-                }
+            let htmlContent = '';
+            if (messages.length === 0) {
+                htmlContent = `<div class="text-center text-slate-500 text-xs my-auto py-12"><i class="fa-regular fa-comments text-2xl mb-2"></i><p>Belum ada percakapan. Mulai sapa teman Anda!</p></div>`;
             } else {
-                document.getElementById('battery-info').innerText = "Tidak didukung browser";
+                messages.forEach(msg => {
+                    const isMe = msg.sender === currentUser;
+                    if (isMe) {
+                        // Pesan Milik Sendiri (Kanan)
+                        htmlContent += `
+                            <div class="flex flex-col items-end space-y-1">
+                                <span class="text-[10px] text-slate-500 px-1">Anda</span>
+                                <div class="bg-emerald-600 text-slate-950 font-medium px-4 py-2.5 rounded-2xl rounded-tr-none max-w-xs md:max-w-md text-xs shadow-md">
+                                    ${escapeHtml(msg.text)}
+                                </div>
+                                <span class="text-[9px] text-slate-500 px-1">${msg.time}</span>
+                            </div>
+                        `;
+                    } else {
+                        // Pesan dari Teman (Kiri)
+                        htmlContent += `
+                            <div class="flex flex-col items-start space-y-1">
+                                <span class="text-[10px] text-emerald-400 font-semibold px-1">${escapeHtml(msg.sender)}</span>
+                                <div class="bg-slate-900 border border-slate-800 text-slate-100 px-4 py-2.5 rounded-2xl rounded-tl-none max-w-xs md:max-w-md text-xs shadow-md">
+                                    ${escapeHtml(msg.text)}
+                                </div>
+                                <span class="text-[9px] text-slate-500 px-1">${msg.time}</span>
+                            </div>
+                        `;
+                    }
+                });
             }
 
-            // 4. Deteksi Status Koneksi Internet
-            const netStatus = document.getElementById('network-info');
-            function updateNetStatus() {
-                if (navigator.onLine) {
-                    netStatus.innerText = "Terhubung (Online)";
-                    netStatus.className = "text-xs font-bold text-emerald-400 mt-0.5";
-                } else {
-                    netStatus.innerText = "Terputus (Offline)";
-                    netStatus.className = "text-xs font-bold text-rose-400 mt-0.5";
-                }
+            chatContainer.innerHTML = htmlContent;
+
+            if (isAtBottom) {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
             }
-            window.addEventListener('online', updateNetStatus);
-            window.addEventListener('offline', updateNetStatus);
-            updateNetStatus();
         }
 
-        function updateBatteryStatus(battery) {
-            const level = Math.round(battery.level * 100);
-            const charging = battery.charging ? " (Mengisi)" : "";
-            document.getElementById('battery-info').innerText = level + "%" + charging;
+        // Bersihkan Riwayat Chat
+        function clearChat() {
+            if (confirm("Yakin ingin menghapus seluruh riwayat obrolan?")) {
+                localStorage.removeItem('chat_history');
+                renderMessages();
+            }
         }
 
-        // Pengaman dasar
-        document.addEventListener('contextmenu', e => e.preventDefault());
+        // Mencegah kode HTML injeksi berbahaya
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
     </script>
 </body>
 </html>
