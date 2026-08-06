@@ -3,112 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureChat - Ruang Obrolan</title>
+    <title>Realtime SecureChat</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased h-screen flex flex-col overflow-hidden">
+    
+    <!-- Firebase SDK (Modular v10) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    <!-- ================= SECTION: HALAMAN LOGIN ================= -->
-    <div id="login-section" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl space-y-6">
-            <div class="text-center space-y-2">
-                <div class="inline-block bg-emerald-500/10 text-emerald-400 p-3 rounded-2xl border border-emerald-500/20 mb-2">
-                    <i class="fa-solid fa-lock text-2xl"></i>
-                </div>
-                <h2 class="text-xl font-bold tracking-tight">Otentikasi SecureChat</h2>
-                <p class="text-xs text-slate-400">Masukkan nama dan password rahasia untuk masuk.</p>
-            </div>
+        // ==========================================
+        // KONFIGURASI FIREBASE ANDA
+        // (Ganti data di bawah ini dengan milik Anda dari console.firebase.google.com)
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "ISI_API_KEY_ANDA",
+            authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://ISI_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "ISI_PROJECT_ID",
+            storageBucket: "ISI_PROJECT_ID.appspot.com",
+            messagingSenderId: "ISI_SENDER_ID",
+            appId: "ISI_APP_ID"
+        };
 
-            <form onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Nama Anda</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-user text-xs"></i></span>
-                        <input type="text" id="username-input" required placeholder="Contoh: Budi" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 pl-9 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
-                    </div>
-                </div>
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Password Ruangan</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-key text-xs"></i></span>
-                        <input type="password" id="password-input" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 pl-9 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
-                    </div>
-                </div>
-
-                <div id="error-msg" class="text-rose-400 text-xs text-center hidden font-medium">Password salah! (Gunakan: rahasia123)</div>
-
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer mt-2">
-                    Masuk ke Obrolan
-                </button>
-            </form>
-            <p class="text-[10px] text-center text-slate-500">Hint Password: <code class="text-emerald-400 font-mono">rahasia123</code></p>
-        </div>
-    </div>
-
-
-    <!-- ================= SECTION: DASHBOARD CHAT UTAMA ================= -->
-    <div id="chat-dashboard" class="hidden flex flex-col h-full w-full max-w-5xl mx-auto border-x border-slate-800 bg-slate-900 shadow-2xl">
-        
-        <!-- Header Chat -->
-        <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center z-10">
-            <div class="flex items-center space-x-3">
-                <div class="relative">
-                    <div class="w-10 h-10 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center font-bold">
-                        <i class="fa-solid fa-comments"></i>
-                    </div>
-                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
-                </div>
-                <div>
-                    <h2 class="text-sm font-bold">Grup Obrolan Privat</h2>
-                    <p class="text-[10px] text-emerald-400 flex items-center gap-1">Online sebagai: <span id="current-user-display" class="font-semibold"></span></p>
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-3">
-                <button onclick="resetDefaultChat()" class="text-xs bg-slate-800 hover:bg-emerald-500/10 text-slate-400 hover:text-emerald-400 border border-slate-700 px-3 py-1.5 rounded-lg transition cursor-pointer" title="Muat Pesan Contoh">
-                    <i class="fa-solid fa-rotate-right mr-1"></i> Reset Chat
-                </button>
-                <button onclick="handleLogout()" class="text-xs bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 border border-slate-700 px-3 py-1.5 rounded-lg transition cursor-pointer">
-                    Keluar
-                </button>
-            </div>
-        </header>
-
-        <!-- Area Pesan -->
-        <div id="chat-messages" class="flex-grow p-4 md:p-6 overflow-y-auto space-y-4 bg-slate-950/50">
-            <!-- Pesan akan muncul di sini -->
-        </div>
-
-        <!-- Form Kirim Pesan -->
-        <footer class="bg-slate-900 border-t border-slate-800 p-4">
-            <form onsubmit="sendMessage(event)" class="flex gap-2">
-                <input type="text" id="message-input" required placeholder="Tulis pesan..." class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold px-5 py-3 rounded-xl text-xs transition flex items-center justify-center cursor-pointer">
-                    <i class="fa-solid fa-paper-plane"></i>
-                </button>
-            </form>
-        </footer>
-    </div>
-
-
-    <!-- ================= SCRIPT LOGIKA ================= -->
-    <script>
         let currentUser = "";
-        const CORRECT_PASSWORD = "rahasia123";
+        const CORRECT_PASSWORD = "rahasia123"; // Password ruangan chat
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedUser = localStorage.getItem('securechat_user');
-            if (savedUser) {
-                currentUser = savedUser;
-                showDashboard();
-            }
-        });
-
-        function handleLogin(e) {
+        window.handleLogin = function(e) {
             e.preventDefault();
             const nameInput = document.getElementById('username-input').value.trim();
             const passInput = document.getElementById('password-input').value;
@@ -117,13 +44,6 @@
             if (passInput === CORRECT_PASSWORD && nameInput) {
                 currentUser = nameInput;
                 localStorage.setItem('securechat_user', currentUser);
-                
-                // Jika belum ada riwayat sama sekali, buatkan pesan sambutan awal otomatis
-                if (!localStorage.getItem('securechat_history')) {
-                    const defaultMsg = [{ sender: "System", text: "Selamat datang di ruang obrolan aman! Silakan mulai ketik pesan Anda di bawah.", time: "Baru saja" }];
-                    localStorage.setItem('securechat_history', JSON.stringify(defaultMsg));
-                }
-
                 showDashboard();
             } else {
                 errorMsg.classList.remove('hidden');
@@ -137,85 +57,89 @@
             dashboard.classList.add('flex');
             document.getElementById('current-user-display').innerText = currentUser;
             
-            renderMessages();
-            setInterval(renderMessages, 1000);
+            listenMessages();
         }
 
-        function handleLogout() {
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem('securechat_user');
+            if (savedUser) {
+                currentUser = savedUser;
+                showDashboard();
+            }
+        });
+
+        window.handleLogout = function() {
             localStorage.removeItem('securechat_user');
             location.reload();
         }
 
-        function sendMessage(e) {
+        // Kirim Pesan ke Firebase Database
+        window.sendMessage = function(e) {
             e.preventDefault();
             const input = document.getElementById('message-input');
             const text = input.value.trim();
             if (!text) return;
 
             const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-            const newMessage = { sender: currentUser, text: text, time: timeNow };
-
-            let messages = JSON.parse(localStorage.getItem('securechat_history')) || [];
-            messages.push(newMessage);
-            localStorage.setItem('securechat_history', JSON.stringify(messages));
-
-            input.value = '';
-            renderMessages();
-        }
-
-        function renderMessages() {
-            const chatContainer = document.getElementById('chat-messages');
-            let messages = JSON.parse(localStorage.getItem('securechat_history'));
             
-            // Jika memori kosong, set pesan sambutan default
-            if (!messages) {
-                messages = [{ sender: "System", text: "Selamat datang di ruang obrolan aman! Silakan mulai ketik pesan.", time: "Baru saja" }];
-                localStorage.setItem('securechat_history', JSON.stringify(messages));
-            }
-
-            const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop <= chatContainer.clientHeight + 50;
-
-            let htmlContent = '';
-            messages.forEach(msg => {
-                if (msg.sender === "System") {
-                    htmlContent += `
-                        <div class="text-center my-2">
-                            <span class="bg-slate-900 border border-slate-800 text-slate-400 text-[10px] px-3 py-1 rounded-full">${escapeHtml(msg.text)}</span>
-                        </div>
-                    `;
-                } else if (msg.sender === currentUser) {
-                    htmlContent += `
-                        <div class="flex flex-col items-end space-y-1">
-                            <span class="text-[10px] text-slate-500 px-1">Anda</span>
-                            <div class="bg-emerald-600 text-slate-950 font-medium px-4 py-2.5 rounded-2xl rounded-tr-none max-w-xs md:max-w-md text-xs shadow-md">
-                                ${escapeHtml(msg.text)}
-                            </div>
-                            <span class="text-[9px] text-slate-500 px-1">${msg.time}</span>
-                        </div>
-                    `;
-                } else {
-                    htmlContent += `
-                        <div class="flex flex-col items-start space-y-1">
-                            <span class="text-[10px] text-emerald-400 font-semibold px-1">${escapeHtml(msg.sender)}</span>
-                            <div class="bg-slate-900 border border-slate-800 text-slate-100 px-4 py-2.5 rounded-2xl rounded-tl-none max-w-xs md:max-w-md text-xs shadow-md">
-                                ${escapeHtml(msg.text)}
-                            </div>
-                            <span class="text-[9px] text-slate-500 px-1">${msg.time}</span>
-                        </div>
-                    `;
-                }
+            // Masukkan data baru ke database real-time
+            const chatRef = ref(db, 'messages');
+            const newChatRef = push(chatRef);
+            set(newChatRef, {
+                sender: currentUser,
+                text: text,
+                time: timeNow
             });
 
-            chatContainer.innerHTML = htmlContent;
-            if (isAtBottom) {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
+            input.value = '';
         }
 
-        function resetDefaultChat() {
-            if (confirm("Muat ulang pesan sambutan?")) {
-                localStorage.removeItem('securechat_history');
-                renderMessages();
+        // Mendengarkan Pesan Secara Real-time dari Database
+        function listenMessages() {
+            const chatContainer = document.getElementById('chat-messages');
+            const chatRef = ref(db, 'messages');
+
+            onValue(chatRef, (snapshot) => {
+                const data = snapshot.val();
+                let htmlContent = '';
+                
+                if (!data) {
+                    htmlContent = `<div class="text-center text-slate-500 text-xs my-auto py-12"><i class="fa-regular fa-comments text-2xl mb-2"></i><p>Belum ada percakapan. Mulai kirim pesan!</p></div>`;
+                } else {
+                    Object.values(data).forEach(msg => {
+                        if (msg.sender === currentUser) {
+                            htmlContent += `
+                                <div class="flex flex-col items-end space-y-1">
+                                    <span class="text-[10px] text-slate-500 px-1">Anda</span>
+                                    <div class="bg-emerald-600 text-slate-950 font-medium px-4 py-2.5 rounded-2xl rounded-tr-none max-w-xs md:max-w-md text-xs shadow-md">
+                                        ${escapeHtml(msg.text)}
+                                    </div>
+                                    <span class="text-[9px] text-slate-500 px-1">${msg.time}</span>
+                                </div>
+                            `;
+                        } else {
+                            htmlContent += `
+                                <div class="flex flex-col items-start space-y-1">
+                                    <span class="text-[10px] text-emerald-400 font-semibold px-1">${escapeHtml(msg.sender)}</span>
+                                    <div class="bg-slate-900 border border-slate-800 text-slate-100 px-4 py-2.5 rounded-2xl rounded-tl-none max-w-xs md:max-w-md text-xs shadow-md">
+                                        ${escapeHtml(msg.text)}
+                                    </div>
+                                    <span class="text-[9px] text-slate-500 px-1">${msg.time}</span>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+
+                chatContainer.innerHTML = htmlContent;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            });
+        }
+
+        window.clearChat = function() {
+            if (confirm("Hapus seluruh riwayat chat untuk semua orang?")) {
+                const chatRef = ref(db, 'messages');
+                remove(chatRef);
             }
         }
 
@@ -224,5 +148,70 @@
             return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
     </script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased h-screen flex flex-col overflow-hidden">
+
+    <!-- LOGIN SECTION -->
+    <div id="login-section" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <div class="inline-block bg-emerald-500/10 text-emerald-400 p-3 rounded-2xl border border-emerald-500/20 mb-2">
+                    <i class="fa-solid fa-lock text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold tracking-tight">Otentikasi Realtime Chat</h2>
+                <p class="text-xs text-slate-400">Masukkan nama dan password ruangan.</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Nama Anda</label>
+                    <input type="text" id="username-input" required placeholder="Contoh: Budi" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Password Ruangan</label>
+                    <input type="password" id="password-input" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
+                </div>
+                <div id="error-msg" class="text-rose-400 text-xs text-center hidden font-medium">Password salah! (Gunakan: rahasia123)</div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer">
+                    Masuk ke Obrolan
+                </button>
+            </form>
+            <p class="text-[10px] text-center text-slate-500">Hint Password: <code class="text-emerald-400 font-mono">rahasia123</code></p>
+        </div>
+    </div>
+
+    <!-- DASHBOARD CHAT UTAMA -->
+    <div id="chat-dashboard" class="hidden flex flex-col h-full w-full max-w-5xl mx-auto border-x border-slate-800 bg-slate-900 shadow-2xl">
+        <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center z-10">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-comments"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold">Ruang Chat Online</h2>
+                    <p class="text-[10px] text-emerald-400">Online sebagai: <span id="current-user-display" class="font-semibold"></span></p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="clearChat()" class="text-xs bg-slate-800 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 border border-slate-700 px-3 py-1.5 rounded-lg transition cursor-pointer">
+                    <i class="fa-solid fa-trash-can mr-1"></i> Bersihkan
+                </button>
+                <button onclick="handleLogout()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg transition cursor-pointer">
+                    Keluar
+                </button>
+            </div>
+        </header>
+
+        <div id="chat-messages" class="flex-grow p-4 md:p-6 overflow-y-auto space-y-4 bg-slate-950/50"></div>
+
+        <footer class="bg-slate-900 border-t border-slate-800 p-4">
+            <form onsubmit="sendMessage(event)" class="flex gap-2">
+                <input type="text" id="message-input" required placeholder="Tulis pesan ke teman..." class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold px-5 py-3 rounded-xl text-xs transition flex items-center justify-center cursor-pointer">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </footer>
+    </div>
 </body>
 </html>
