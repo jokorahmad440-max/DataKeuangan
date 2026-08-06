@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureGuard - Login 2FA & Dashboard</title>
+    <title>SecureGuard - Login 2FA & Scan</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- FontAwesome -->
@@ -22,7 +22,7 @@
                 <p class="text-xs text-slate-400">Masukkan kredensial akses Anda (Tahap 1/2)</p>
             </div>
 
-            <form id="login-form" onsubmit="handleLoginStep1(event)" class="space-y-4">
+            <form onsubmit="handleLoginStep1(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1.5">Username</label>
                     <div class="relative">
@@ -50,36 +50,56 @@
     </div>
 
 
-    <!-- ================= SECTION: HALAMAN VERIFIKASI 2FA (TAHAP 2) ================= -->
+    <!-- ================= SECTION: HALAMAN VERIFIKASI 2FA & SCAN (TAHAP 2) ================= -->
     <div id="otp-section" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4 hidden">
         <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl space-y-6">
             <div class="text-center space-y-2">
                 <div class="inline-block bg-purple-500/10 text-purple-400 p-3 rounded-2xl border border-purple-500/20 mb-2">
-                    <i class="fa-solid fa-lock text-2xl"></i>
+                    <i class="fa-solid fa-qrcode text-2xl"></i>
                 </div>
-                <h2 class="text-xl font-bold tracking-tight">Verifikasi 2FA (OTP)</h2>
-                <p class="text-xs text-slate-400">Masukkan kode 6-digit keamanan Anda.</p>
+                <h2 class="text-xl font-bold tracking-tight">Verifikasi 2FA & Scan</h2>
+                <p class="text-xs text-slate-400">Pilih metode verifikasi keamanan Anda.</p>
             </div>
 
-            <form onsubmit="handleLoginStep2(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Kode OTP (Contoh: 888999)</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-shield-cat text-xs"></i></span>
-                        <input type="text" id="otp-code" maxlength="6" required placeholder="888999" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 pl-9 text-xs text-slate-100 tracking-widest font-mono text-center focus:outline-none focus:border-purple-500 transition">
+            <!-- Tab Pilihan Metode -->
+            <div class="flex rounded-xl bg-slate-950 p-1 border border-slate-800 text-xs">
+                <button type="button" onclick="switchTab('otp')" id="tab-otp" class="flex-1 py-2 rounded-lg font-medium bg-purple-600 text-white transition cursor-pointer">Kode OTP</button>
+                <button type="button" onclick="switchTab('scan')" id="tab-scan" class="flex-1 py-2 rounded-lg font-medium text-slate-400 hover:text-white transition cursor-pointer">Scan QR Authenticator</button>
+            </div>
+
+            <!-- Form Input OTP Manual -->
+            <div id="form-otp-container" class="space-y-4">
+                <form onsubmit="handleLoginStep2(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Masukkan Kode OTP (888999)</label>
+                        <input type="text" id="otp-code" maxlength="6" placeholder="888999" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 tracking-widest font-mono text-center focus:outline-none focus:border-purple-500 transition">
                     </div>
+                    <div id="otp-error-msg" class="text-rose-400 text-xs text-center hidden font-medium">Kode OTP salah!</div>
+                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer">
+                        Verifikasi Kode
+                    </button>
+                </form>
+            </div>
+
+            <!-- Simulasi Kamera Scan QR -->
+            <div id="form-scan-container" class="space-y-4 hidden text-center">
+                <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col items-center justify-center space-y-3">
+                    <div class="w-36 h-36 bg-slate-900 border-2 border-dashed border-purple-500/50 rounded-lg flex flex-col items-center justify-center text-slate-400 relative overflow-hidden">
+                        <i class="fa-solid fa-camera text-3xl mb-1 text-purple-400 animate-pulse"></i>
+                        <span class="text-[10px]">Kamera Aktif</span>
+                        <!-- Garis Scan Animasi -->
+                        <div class="absolute inset-x-0 h-0.5 bg-purple-400 shadow-[0_0_10px_#c084fc] animate-bounce"></div>
+                    </div>
+                    <p class="text-[11px] text-slate-400">Arahkan kamera HP ke QR Code Google Authenticator Anda.</p>
                 </div>
-
-                <div id="otp-error-msg" class="text-rose-400 text-xs text-center hidden font-medium">Kode OTP salah! (Gunakan: 888999)</div>
-
-                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition shadow-lg shadow-purple-900/20 cursor-pointer mt-2">
-                    Verifikasi & Masuk
+                <button type="button" onclick="simulateScanSuccess()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer">
+                    <i class="fa-solid fa-bolt mr-1"></i> Simulasi Scan Berhasil
                 </button>
-                <button type="button" onclick="backToLogin()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2 rounded-xl text-xs transition cursor-pointer">
-                    Kembali
-                </button>
-            </form>
-            <p class="text-[10px] text-center text-slate-500">Hint OTP Default: <code class="text-purple-400 font-mono">888999</code></p>
+            </div>
+
+            <button type="button" onclick="backToLogin()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2 rounded-xl text-xs transition cursor-pointer">
+                Kembali ke Login
+            </button>
         </div>
     </div>
 
@@ -113,75 +133,90 @@
                 <div class="space-y-2 text-center md:text-left">
                     <span class="text-emerald-400 text-xs font-semibold tracking-wider uppercase bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">Status Perlindungan</span>
                     <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Postur Keamanan Anda Baik</h2>
-                    <p class="text-slate-400 text-sm max-w-xl">Semua parameter inti enkripsi dan kredensial Anda terpantau aman.</p>
+                    <p class="text-slate-400 text-sm max-w-xl">Semua parameter enkripsi & verifikasi biometrik/scan aktif.</p>
                 </div>
                 <div class="flex items-center gap-4 bg-slate-950/60 border border-slate-800 p-4 rounded-2xl">
-                    <div class="text-3xl font-black text-emerald-400 font-mono">95%</div>
+                    <div class="text-3xl font-black text-emerald-400 font-mono">98%</div>
                     <div class="text-xs space-y-1">
                         <p class="text-slate-300 font-medium">Skor Keamanan</p>
-                        <p class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> 2FA Aktif</p>
+                        <p class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> 2FA Scan Terhubung</p>
                     </div>
                 </div>
             </section>
         </main>
 
         <footer class="border-t border-slate-800/80 bg-slate-900/50 mt-12 py-6 text-center text-xs text-slate-500">
-            <p>Personal Security Dashboard &bull; Sesi Terproteksi 2FA</p>
+            <p>Personal Security Dashboard &bull; Sesi Terproteksi</p>
         </footer>
     </div>
 
 
-    <!-- ================= SCRIPT LOGIKA & 2FA ================= -->
+    <!-- ================= SCRIPT LOGIKA ================= -->
     <script>
-        // Cek Sesi Saat Dimuat
         window.addEventListener('DOMContentLoaded', () => {
-            const isLogged = localStorage.getItem('secureguard_logged');
-            if (isLogged === 'true') {
+            if (localStorage.getItem('secureguard_logged') === 'true') {
                 showDashboard();
             }
         });
 
-        // Tahap 1: Validasi Username & Password
         function handleLoginStep1(e) {
             e.preventDefault();
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
-            const errorMsg = document.getElementById('error-msg');
-
             if (user === 'admin' && pass === '12345') {
-                errorMsg.classList.add('hidden');
-                // Pindah ke tampilan OTP
+                document.getElementById('error-msg').classList.add('hidden');
                 document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('otp-section').classList.remove('hidden');
             } else {
-                errorMsg.classList.remove('hidden');
+                document.getElementById('error-msg').classList.remove('hidden');
             }
         }
 
-        // Kembali dari halaman OTP ke Login
+        // Ganti Tab antara OTP Manual dan Scan QR
+        function switchTab(mode) {
+            const tabOtp = document.getElementById('tab-otp');
+            const tabScan = document.getElementById('tab-scan');
+            const formOtp = document.getElementById('form-otp-container');
+            const formScan = document.getElementById('form-scan-container');
+
+            if (mode === 'otp') {
+                tabOtp.className = "flex-1 py-2 rounded-lg font-medium bg-purple-600 text-white transition cursor-pointer";
+                tabScan.className = "flex-1 py-2 rounded-lg font-medium text-slate-400 hover:text-white transition cursor-pointer";
+                formOtp.classList.remove('hidden');
+                formScan.classList.add('hidden');
+            } else {
+                tabScan.className = "flex-1 py-2 rounded-lg font-medium bg-purple-600 text-white transition cursor-pointer";
+                tabOtp.className = "flex-1 py-2 rounded-lg font-medium text-slate-400 hover:text-white transition cursor-pointer";
+                formScan.classList.remove('hidden');
+                formOtp.classList.add('hidden');
+            }
+        }
+
         function backToLogin() {
             document.getElementById('otp-section').classList.add('hidden');
             document.getElementById('login-section').classList.remove('hidden');
-            document.getElementById('otp-error-msg').classList.add('hidden');
         }
 
-        // Tahap 2: Validasi Kode OTP
         function handleLoginStep2(e) {
             e.preventDefault();
-            const otpInput = document.getElementById('otp-code').value;
-            const otpError = document.getElementById('otp-error-msg');
-
-            // Kode OTP default: 888999
-            if (otpInput === '888999') {
-                localStorage.setItem('secureguard_logged', 'true');
-                document.getElementById('otp-section').classList.add('hidden');
-                showDashboard();
+            if (document.getElementById('otp-code').value === '888999') {
+                grantAccess();
             } else {
-                otpError.classList.remove('hidden');
+                document.getElementById('otp-error-msg').classList.remove('hidden');
             }
         }
 
-        // Tampilkan Dashboard
+        function simulateScanSuccess() {
+            alert("QR Code Berhasil Dipindai dan Divalidasi!");
+            grantAccess();
+        }
+
+        function grantAccess() {
+            localStorage.setItem('secureguard_logged', 'true');
+            document.getElementById('otp-section').classList.add('hidden');
+            showDashboard();
+        }
+
         function showDashboard() {
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('otp-section').classList.add('hidden');
@@ -189,38 +224,17 @@
             document.getElementById('dashboard-section').classList.add('flex');
         }
 
-        // Logout
         function handleLogout() {
             localStorage.removeItem('secureguard_logged');
-            document.getElementById('dashboard-section').classList.remove('flex');
-            document.getElementById('dashboard-section').classList.add('hidden');
-            document.getElementById('login-section').classList.remove('hidden');
-            document.getElementById('password').value = '';
-            document.getElementById('otp-code').value = '';
-            document.getElementById('error-msg').classList.add('hidden');
-            document.getElementById('otp-error-msg').classList.add('hidden');
+            location.reload();
         }
 
-        // Pengaman
+        // Pengaman & Jam
         document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-            if (e.key === 'F12' || e.keyCode === 123 || 
-               (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c'].includes(e.key)) || 
-               (e.ctrlKey && ['U','u','S','s'].includes(e.key))) {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // Jam
-        function updateClock() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const clockEl = document.getElementById('live-clock');
-            if (clockEl) clockEl.innerText = timeString + " WIB";
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
+        setInterval(() => {
+            const clock = document.getElementById('live-clock');
+            if(clock) clock.innerText = new Date().toLocaleTimeString('id-ID') + " WIB";
+        }, 1000);
     </script>
 </body>
 </html>
