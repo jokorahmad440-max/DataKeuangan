@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureChat - Login & Ruang Obrolan</title>
+    <title>SecureChat - Ruang Obrolan</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- FontAwesome -->
@@ -11,7 +11,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans antialiased h-screen flex flex-col overflow-hidden">
 
-    <!-- ================= SECTION: HALAMAN LOGIN DENGAN PASSWORD ================= -->
+    <!-- ================= SECTION: HALAMAN LOGIN ================= -->
     <div id="login-section" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl space-y-6">
             <div class="text-center space-y-2">
@@ -45,7 +45,7 @@
                     Masuk ke Obrolan
                 </button>
             </form>
-            <p class="text-[10px] text-center text-slate-500">Hint Password Default: <code class="text-emerald-400 font-mono">rahasia123</code></p>
+            <p class="text-[10px] text-center text-slate-500">Hint Password: <code class="text-emerald-400 font-mono">rahasia123</code></p>
         </div>
     </div>
 
@@ -69,10 +69,10 @@
             </div>
             
             <div class="flex items-center space-x-3">
-                <button onclick="clearChat()" class="text-xs bg-slate-800 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 border border-slate-700 px-3 py-1.5 rounded-lg transition cursor-pointer">
-                    <i class="fa-solid fa-trash-can mr-1"></i> Bersihkan
+                <button onclick="resetDefaultChat()" class="text-xs bg-slate-800 hover:bg-emerald-500/10 text-slate-400 hover:text-emerald-400 border border-slate-700 px-3 py-1.5 rounded-lg transition cursor-pointer" title="Muat Pesan Contoh">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Reset Chat
                 </button>
-                <button onclick="handleLogout()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg transition cursor-pointer">
+                <button onclick="handleLogout()" class="text-xs bg-slate-800 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 border border-slate-700 px-3 py-1.5 rounded-lg transition cursor-pointer">
                     Keluar
                 </button>
             </div>
@@ -80,7 +80,7 @@
 
         <!-- Area Pesan -->
         <div id="chat-messages" class="flex-grow p-4 md:p-6 overflow-y-auto space-y-4 bg-slate-950/50">
-            <!-- Pesan masuk dinamis -->
+            <!-- Pesan akan muncul di sini -->
         </div>
 
         <!-- Form Kirim Pesan -->
@@ -98,7 +98,7 @@
     <!-- ================= SCRIPT LOGIKA ================= -->
     <script>
         let currentUser = "";
-        const CORRECT_PASSWORD = "rahasia123"; // Atur password ruangan di sini
+        const CORRECT_PASSWORD = "rahasia123";
 
         window.addEventListener('DOMContentLoaded', () => {
             const savedUser = localStorage.getItem('securechat_user');
@@ -117,6 +117,13 @@
             if (passInput === CORRECT_PASSWORD && nameInput) {
                 currentUser = nameInput;
                 localStorage.setItem('securechat_user', currentUser);
+                
+                // Jika belum ada riwayat sama sekali, buatkan pesan sambutan awal otomatis
+                if (!localStorage.getItem('securechat_history')) {
+                    const defaultMsg = [{ sender: "System", text: "Selamat datang di ruang obrolan aman! Silakan mulai ketik pesan Anda di bawah.", time: "Baru saja" }];
+                    localStorage.setItem('securechat_history', JSON.stringify(defaultMsg));
+                }
+
                 showDashboard();
             } else {
                 errorMsg.classList.remove('hidden');
@@ -158,38 +165,46 @@
 
         function renderMessages() {
             const chatContainer = document.getElementById('chat-messages');
-            const messages = JSON.parse(localStorage.getItem('securechat_history')) || [];
+            let messages = JSON.parse(localStorage.getItem('securechat_history'));
+            
+            // Jika memori kosong, set pesan sambutan default
+            if (!messages) {
+                messages = [{ sender: "System", text: "Selamat datang di ruang obrolan aman! Silakan mulai ketik pesan.", time: "Baru saja" }];
+                localStorage.setItem('securechat_history', JSON.stringify(messages));
+            }
+
             const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop <= chatContainer.clientHeight + 50;
 
             let htmlContent = '';
-            if (messages.length === 0) {
-                htmlContent = `<div class="text-center text-slate-500 text-xs my-auto py-12"><i class="fa-regular fa-comments text-2xl mb-2"></i><p>Belum ada percakapan. Mulai kirim pesan!</p></div>`;
-            } else {
-                messages.forEach(msg => {
-                    const isMe = msg.sender === currentUser;
-                    if (isMe) {
-                        htmlContent += `
-                            <div class="flex flex-col items-end space-y-1">
-                                <span class="text-[10px] text-slate-500 px-1">Anda</span>
-                                <div class="bg-emerald-600 text-slate-950 font-medium px-4 py-2.5 rounded-2xl rounded-tr-none max-w-xs md:max-w-md text-xs shadow-md">
-                                    ${escapeHtml(msg.text)}
-                                </div>
-                                <span class="text-[9px] text-slate-500 px-1">${msg.time}</span>
+            messages.forEach(msg => {
+                if (msg.sender === "System") {
+                    htmlContent += `
+                        <div class="text-center my-2">
+                            <span class="bg-slate-900 border border-slate-800 text-slate-400 text-[10px] px-3 py-1 rounded-full">${escapeHtml(msg.text)}</span>
+                        </div>
+                    `;
+                } else if (msg.sender === currentUser) {
+                    htmlContent += `
+                        <div class="flex flex-col items-end space-y-1">
+                            <span class="text-[10px] text-slate-500 px-1">Anda</span>
+                            <div class="bg-emerald-600 text-slate-950 font-medium px-4 py-2.5 rounded-2xl rounded-tr-none max-w-xs md:max-w-md text-xs shadow-md">
+                                ${escapeHtml(msg.text)}
                             </div>
-                        `;
-                    } else {
-                        htmlContent += `
-                            <div class="flex flex-col items-start space-y-1">
-                                <span class="text-[10px] text-emerald-400 font-semibold px-1">${escapeHtml(msg.sender)}</span>
-                                <div class="bg-slate-900 border border-slate-800 text-slate-100 px-4 py-2.5 rounded-2xl rounded-tl-none max-w-xs md:max-w-md text-xs shadow-md">
-                                    ${escapeHtml(msg.text)}
-                                </div>
-                                <span class="text-[9px] text-slate-500 px-1">${msg.time}</span>
+                            <span class="text-[9px] text-slate-500 px-1">${msg.time}</span>
+                        </div>
+                    `;
+                } else {
+                    htmlContent += `
+                        <div class="flex flex-col items-start space-y-1">
+                            <span class="text-[10px] text-emerald-400 font-semibold px-1">${escapeHtml(msg.sender)}</span>
+                            <div class="bg-slate-900 border border-slate-800 text-slate-100 px-4 py-2.5 rounded-2xl rounded-tl-none max-w-xs md:max-w-md text-xs shadow-md">
+                                ${escapeHtml(msg.text)}
                             </div>
-                        `;
-                    }
-                });
-            }
+                            <span class="text-[9px] text-slate-500 px-1">${msg.time}</span>
+                        </div>
+                    `;
+                }
+            });
 
             chatContainer.innerHTML = htmlContent;
             if (isAtBottom) {
@@ -197,8 +212,8 @@
             }
         }
 
-        function clearChat() {
-            if (confirm("Hapus seluruh riwayat chat?")) {
+        function resetDefaultChat() {
+            if (confirm("Muat ulang pesan sambutan?")) {
                 localStorage.removeItem('securechat_history');
                 renderMessages();
             }
