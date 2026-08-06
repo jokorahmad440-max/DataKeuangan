@@ -3,256 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keuangan Pribadi - Sederhana & Permanen</title>
-    <!-- Tailwind CSS -->
+    <title>Dashboard Keamanan Pribadi</title>
+    <!-- Tailwind CSS untuk Styling Cepat & Modern -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    
-    <!-- Skrip Pengaman F12 & Klik Kanan -->
-    <script>
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) || (e.ctrlKey && e.key === 'U')) {
-                e.preventDefault();
-                return false;
-            }
-        });
-    </script>
-
-    <!-- Firebase SDK Firestore (Database Saja) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // --- GANTI DENGAN CONFIG FIREBASE PROJECT ANDA ---
-        const firebaseConfig = {
-            apiKey: "MASUKKAN_API_KEY_ANDA",
-            authDomain: "MASUKKAN_AUTH_DOMAIN_ANDA",
-            projectId: "MASUKKAN_PROJECT_ID_ANDA",
-            storageBucket: "MASUKKAN_STORAGE_BUCKET_ANDA",
-            messagingSenderId: "MASUKKAN_MESSAGING_SENDER_ID_ANDA",
-            appId: "MASUKKAN_APP_ID_ANDA"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        let activeUser = localStorage.getItem('active_user') || "";
-
-        // Cek status sesi lokal saat halaman dibuka
-        window.onload = function() {
-            if (activeUser) {
-                bukaAplikasi(activeUser);
-            }
-        }
-
-        // 1. Login Manual
-        window.loginManual = function() {
-            const u = document.getElementById('username-inp').value.trim();
-            const p = document.getElementById('pass-inp').value.trim();
-
-            if (u === 'vzqaajoko' && p === '1') {
-                activeUser = 'vzqaajoko_user';
-                localStorage.setItem('active_user', activeUser);
-                bukaAplikasi("Akun Manual: vzqaajoko");
-            } else {
-                alert('Username atau Password salah!');
-            }
-        }
-
-        // 2. Login Google Sederhana (Mengambil identitas dari akun Google di browser tanpa sistem Auth yang rumit)
-        window.loginGoogleSimple = function() {
-            // Meminta izin pop-up Google atau simulasi akun Google aktif
-            let emailGoogle = prompt("Masukkan alamat Email Google Anda untuk masuk:");
-            if (emailGoogle && emailGoogle.includes('@')) {
-                activeUser = emailGoogle;
-                localStorage.setItem('active_user', activeUser);
-                bukaAplikasi(emailGoogle);
-            } else if (emailGoogle !== null) {
-                alert("Format email tidak valid!");
-            }
-        }
-
-        window.logoutApp = function() {
-            localStorage.removeItem('active_user');
-            location.reload();
-        }
-
-        function bukaAplikasi(infoUser) {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('app-screen').classList.remove('hidden');
-            document.getElementById('user-info').innerText = `Login: ${infoUser}`;
-            muatData();
-        }
-
-        window.formatRupiah = function(angka) {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
-        }
-
-        // Ambil Data dari Database Cloud Firestore
-        async function muatData() {
-            const elemenRiwayat = document.getElementById('riwayat-list');
-            const elemenSaldo = document.getElementById('total-saldo');
-            elemenRiwayat.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Memuat data...</p>';
-
-            try {
-                const q = query(collection(db, "transaksi_pribadi"), where("owner", "==", activeUser));
-                const querySnapshot = await getDocs(q);
-                
-                let totalSaldo = 0;
-                let listTransaksi = [];
-
-                querySnapshot.forEach((docSnap) => {
-                    let data = docSnap.data();
-                    data.id = docSnap.id;
-                    listTransaksi.push(data);
-                    
-                    if (data.tipe === 'masuk') totalSaldo += Number(data.jumlah);
-                    else totalSaldo -= Number(data.jumlah);
-                });
-
-                elemenSaldo.innerText = formatRupiah(totalSaldo);
-                elemenRiwayat.innerHTML = '';
-
-                if (listTransaksi.length === 0) {
-                    elemenRiwayat.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Belum ada catatan keuangan.</p>';
-                    return;
-                }
-
-                listTransaksi.forEach((item) => {
-                    elemenRiwayat.innerHTML += `
-                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100 text-sm">
-                            <div>
-                                <p class="font-medium text-slate-700">${item.keterangan}</p>
-                                <span class="text-xs ${item.tipe === 'masuk' ? 'text-emerald-600' : 'text-rose-600'} font-semibold">
-                                    ${item.tipe === 'masuk' ? '+' : '-'} ${formatRupiah(item.jumlah)}
-                                </span>
-                            </div>
-                            <button onclick="hapusTransaksi('${item.id}')" class="text-slate-400 hover:text-rose-600 text-xs">Hapus</button>
-                        </div>
-                    `;
-                });
-            } catch (error) {
-                console.error(error);
-                elemenRiwayat.innerHTML = '<p class="text-xs text-rose-500 text-center py-4">Gagal memuat database cloud.</p>';
-            }
-        }
-
-        window.tambahTransaksi = async function(tipe) {
-            const keterangan = document.getElementById('keterangan').value.trim();
-            const jumlah = parseFloat(document.getElementById('jumlah').value);
-
-            if (!keterangan || isNaN(jumlah) || jumlah <= 0) {
-                alert('Isi keterangan dan nominal dengan benar!');
-                return;
-            }
-
-            try {
-                await addDoc(collection(db, "transaksi_pribadi"), {
-                    owner: activeUser,
-                    keterangan: keterangan,
-                    jumlah: jumlah,
-                    tipe: tipe,
-                    tanggal: new Date()
-                });
-
-                document.getElementById('keterangan').value = '';
-                document.getElementById('jumlah').value = '';
-                muatData();
-            } catch (error) {
-                alert('Gagal menyimpan: ' + error.message);
-            }
-        }
-
-        window.hapusTransaksi = async function(id) {
-            if (confirm("Hapus data ini?")) {
-                try {
-                    await deleteDoc(doc(db, "transaksi_pribadi", id));
-                    muatData();
-                } catch (error) {
-                    alert('Gagal menghapus: ' + error.message);
-                }
-            }
-        }
-    </script>
+    <!-- FontAwesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-900 font-sans text-slate-800 flex justify-center items-center min-h-screen">
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col">
 
-    <div class="w-full max-w-md bg-white min-h-screen sm:min-h-[650px] sm:rounded-2xl shadow-2xl flex flex-col justify-between overflow-hidden">
-        
-        <!-- HALAMAN LOGIN -->
-        <div id="login-screen" class="p-8 flex flex-col justify-center flex-1">
-            <div class="text-center mb-6">
-                <h1 class="text-2xl font-bold text-slate-800">Keuangan Pribadi</h1>
-                <p class="text-xs text-slate-500 mt-1">Silakan login untuk akses data permanen.</p>
-            </div>
-
-            <!-- Login Manual -->
-            <div class="space-y-3 mb-6">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">USERNAME</label>
-                    <input type="text" id="username-inp" value="vzqaajoko" class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-800">
+    <!-- Header / Navbar -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-500/10 text-emerald-400 p-2.5 rounded-xl border border-emerald-500/20">
+                    <i class="fa-solid fa-shield-halved text-xl"></i>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">PASSWORD</label>
-                    <input type="password" id="pass-inp" value="1" class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-800">
+                    <h1 class="text-lg font-bold tracking-wide">SecureGuard <span class="text-emerald-400 text-xs uppercase px-2 py-0.5 bg-emerald-950 border border-emerald-800 rounded-full ml-1">Pribadi</span></h1>
+                    <p class="text-xs text-slate-400">Pusat Kontrol Privasi & Keamanan Digital</p>
                 </div>
-                <button onclick="loginManual()" class="w-full bg-slate-900 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-slate-800 transition">Login Manual</button>
             </div>
-
-            <div class="relative flex py-2 items-center mb-6">
-                <div class="flex-grow border-t border-slate-200"></div>
-                <span class="flex-shrink mx-4 text-xs text-slate-400">ATAU</span>
-                <div class="flex-grow border-t border-slate-200"></div>
+            <div class="flex items-center space-x-4">
+                <span id="live-clock" class="text-xs font-mono bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300"></span>
+                <div class="h-9 w-9 bg-slate-800 rounded-full flex items-center justify-center border border-slate-700 font-semibold text-emerald-400">
+                    U
+                </div>
             </div>
-
-            <!-- Login Google Biasa -->
-            <button onclick="loginGoogleSimple()" class="w-full border border-slate-300 text-slate-700 text-sm font-semibold py-2.5 rounded-lg hover:bg-slate-50 transition flex items-center justify-center gap-2">
-                <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-                Login dengan Email Google
-            </button>
         </div>
+    </header>
 
-        <!-- HALAMAN UTAMA APLIKASI -->
-        <div id="app-screen" class="hidden flex flex-col flex-1 justify-between">
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full space-y-8">
+
+        <!-- Banner Skor Keamanan -->
+        <section class="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
             
-            <div class="bg-slate-900 text-white p-6 rounded-b-3xl shadow-md">
-                <div class="flex justify-between items-center mb-2">
-                    <span id="user-info" class="text-xs text-slate-400 truncate max-w-[200px]"></span>
-                    <button onclick="logoutApp()" class="text-xs text-rose-400 hover:underline">Logout</button>
-                </div>
-                <h1 class="text-sm font-medium opacity-80">Saldo Permanen Anda</h1>
-                <h2 id="total-saldo" class="text-3xl font-bold mt-1">Rp 0</h2>
+            <div class="space-y-2 text-center md:text-left">
+                <span class="text-emerald-400 text-xs font-semibold tracking-wider uppercase bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">Status Perlindungan</span>
+                <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Postur Keamanan Anda Baik</h2>
+                <p class="text-slate-400 text-sm max-w-xl">Semua parameter inti enkripsi dan kredensial Anda terpantau aman. Selesaikan 1 rekomendasi tertunda untuk mengoptimalkan privasi.</p>
             </div>
 
-            <div class="p-6 flex-1 overflow-y-auto">
-                <h3 class="font-semibold text-slate-700 mb-3 text-sm">Tambah Transaksi</h3>
-                
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
-                    <div class="mb-3">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">KETERANGAN</label>
-                        <input type="text" id="keterangan" placeholder="Contoh: Gaji, Tabungan" class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900">
+            <div class="flex items-center gap-4 bg-slate-950/60 border border-slate-800 p-4 rounded-2xl">
+                <div class="relative flex items-center justify-center">
+                    <!-- Progress Lingkaran Sederhana -->
+                    <div class="text-3xl font-black text-emerald-400 font-mono">88%</div>
+                </div>
+                <div class="text-xs space-y-1">
+                    <p class="text-slate-300 font-medium">Skor Keamanan</p>
+                    <p class="text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> 4 Sistem Aman</p>
+                    <p class="text-amber-400 flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> 1 Perlu Perhatian</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Grid Status Modul Keamanan -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <!-- Modul 1: Password Manager -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between hover:border-slate-700 transition">
+                <div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-blue-500/10 text-blue-400 p-3 rounded-xl border border-blue-500/20">
+                            <i class="fa-solid fa-key text-lg"></i>
+                        </div>
+                        <span class="bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-medium border border-emerald-500/20">Aktif</span>
                     </div>
-                    <div class="mb-3">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">JUMLAH (RP)</label>
-                        <input type="number" id="jumlah" placeholder="50000" class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900">
+                    <h3 class="font-semibold text-base mb-1">Password Manager</h3>
+                    <p class="text-xs text-slate-400 mb-4">Kredensial tersimpan & pemeriksaan sandi lemah.</p>
+                </div>
+                <div class="border-t border-slate-800/80 pt-4 text-xs space-y-2">
+                    <div class="flex justify-between text-slate-300">
+                        <span>Sandi Lemah/Bocor:</span>
+                        <span class="text-amber-400 font-semibold">1 Akun</span>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="tambahTransaksi('masuk')" class="flex-1 bg-emerald-600 text-white text-xs font-semibold py-2 rounded-lg hover:bg-emerald-700 transition">Pemasukan</button>
-                        <button onclick="tambahTransaksi('keluar')" class="flex-1 bg-rose-600 text-white text-xs font-semibold py-2 rounded-lg hover:bg-rose-700 transition">Pengeluaran</button>
+                    <div class="flex justify-between text-slate-300">
+                        <span>Total Sandi:</span>
+                        <span class="font-mono">42 Item</span>
                     </div>
                 </div>
-
-                <h3 class="font-semibold text-slate-700 mb-3 text-sm">Riwayat Transaksi Cloud</h3>
-                <div id="riwayat-list" class="space-y-2"></div>
             </div>
 
-            <div class="p-4 text-center text-xs text-slate-400 border-t">
-                Keamanan Aktif &bull; Database Cloud Permanen
+            <!-- Modul 2: Autentikasi 2FA -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between hover:border-slate-700 transition">
+                <div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-purple-500/10 text-purple-400 p-3 rounded-xl border border-purple-500/20">
+                            <i class="fa-solid fa-lock text-lg"></i>
+                        </div>
+                        <span class="bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-medium border border-emerald-500/20">Terlindungi</span>
+                    </div>
+                    <h3 class="font-semibold text-base mb-1">Autentikasi 2FA</h3>
+                    <p class="text-xs text-slate-400 mb-4">Lapisan verifikasi ganda akun utama.</p>
+                </div>
+                <div class="border-t border-slate-800/80 pt-4 text-xs space-y-2">
+                    <div class="flex justify-between text-slate-300">
+                        <span>Akun dengan 2FA:</span>
+                        <span class="text-emerald-400 font-semibold">12 / 13</span>
+                    </div>
+                    <div class="flex justify-between text-slate-300">
+                        <span>Metode Utama:</span>
+                        <span class="font-mono">TOTP App / Hardware</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modul 3: Enkripsi Perangkat -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between hover:border-slate-700 transition">
+                <div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-xl border border-emerald-500/20">
+                            <i class="fa-solid fa-hard-drive text-lg"></i>
+                        </div>
+                        <span class="bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-medium border border-emerald-500/20">Enkripsi Aktif</span>
+                    </div>
+                    <h3 class="font-semibold text-base mb-1">Disk & Backup</h3>
+                    <p class="text-xs text-slate-400 mb-4">Keamanan penyimpanan data fisik lokal.</p>
+                </div>
+                <div class="border-t border-slate-800/80 pt-4 text-xs space-y-2">
+                    <div class="flex justify-between text-slate-300">
+                        <span>Status BitLocker/FileVault:</span>
+                        <span class="text-emerald-400 font-semibold">Aktif (100%)</span>
+                    </div>
+                    <div class="flex justify-between text-slate-300">
+                        <span>Backup Terakhir:</span>
+                        <span class="font-mono">3 Hari Lalu</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modul 4: Jaringan & VPN -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between hover:border-slate-700 transition">
+                <div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-cyan-500/10 text-cyan-400 p-3 rounded-xl border border-cyan-500/20">
+                            <i class="fa-solid fa-globe text-lg"></i>
+                        </div>
+                        <span class="bg-amber-500/10 text-amber-400 text-xs px-2.5 py-1 rounded-full font-medium border border-amber-500/20">Wi-Fi Publik</span>
+                    </div>
+                    <h3 class="font-semibold text-base mb-1">Jaringan & VPN</h3>
+                    <p class="text-xs text-slate-400 mb-4">Keamanan koneksi internet aktif saat ini.</p>
+                </div>
+                <div class="border-t border-slate-800/80 pt-4 text-xs space-y-2">
+                    <div class="flex justify-between text-slate-300">
+                        <span>Status VPN:</span>
+                        <span class="text-amber-400 font-semibold">Terputus</span>
+                    </div>
+                    <div class="flex justify-between text-slate-300">
+                        <span>DNS Terenkripsi:</span>
+                        <span class="text-emerald-400">Aktif (DoH)</span>
+                    </div>
+                </div>
             </div>
 
         </div>
 
-    </div>
+        <!-- Tabel Perangkat Aktif & Rekomendasi -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Sesi Aktif -->
+            <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="font-bold text-base">Sesi & Perangkat Terhubung</h3>
+                        <p class="text-xs text-slate-400">Kelola perangkat yang memiliki akses ke akun utama Anda.</p>
+                    </div>
+                    <button class="text-xs text-emerald-400 hover:text-emerald-300 font-medium bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 transition">Segarkan</button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-950 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-mono">
+                            <tr>
+                                <th class="p-3 rounded-l-lg">Perangkat</th>
+                                <th class="p-3">IP / Lokasi</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3 text-right rounded-r-lg">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                            <tr>
+                                <td class="p-3 flex items-center gap-2.5 font-medium">
+                                    <i class="fa-solid fa-laptop text-slate-400 text-base"></i>
+                                    <div>
+                                        <p class="text-slate-100">MacBook Pro M3</p>
+                                        <p class="text-[10px] text-slate-500">Chrome • macOS</p>
+                                    </div>
+                                </td>
+                                <td class="p-3 font-mono text-slate-400">182.253.xx.xx (Sini)</td>
+                                <td class="p-3"><span class="text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/25">Aktif Sekarang</span></td>
+                                <td class="p-3 text-right">
+                                    <span class="text-slate-500 cursor-not-allowed">Ini Perangkat Anda</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 flex items-center gap-2.5 font-medium">
+                                    <i class="fa-solid fa-mobile-screen text-slate-400 text-base"></i>
+                                    <div>
+                                        <p class="text-slate-100">iPhone 15 Pro</p>
+                                        <p class="text-[10px] text-slate-500">Official App • iOS</p>
+                                    </div>
+                                </td>
+                                <td class="p-3 font-mono text-slate-400">114.125.xx.xx</td>
+                                <td class="p-3"><span class="text-slate-400 bg-slate-800 px-2 py-0.5 rounded">2 jam lalu</span></td>
+                                <td class="p-3 text-right">
+                                    <button onclick="revokSession(this)" class="text-rose-400 hover:text-rose-300 font-medium transition bg-rose-500/10 px-2.5 py-1 rounded border border-rose-500/20">Cabut Akses</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
+            <!-- Rekomendasi Tindakan Cepat (Actionable items) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-base mb-1">Rekomendasi Keamanan</h3>
+                    <p class="text-xs text-slate-400 mb-4">Selesaikan untuk memperkuat pertahanan privasi.</p>
+                    
+                    <div class="space-y-3">
+                        <div class="bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-xl flex items-start gap-3">
+                            <div class="text-amber-400 mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <div class="text-xs">
+                                <p class="font-medium text-slate-200">Ganti Sandi Email Utama</p>
+                                <p class="text-slate-400 text-[11px] mt-0.5">Sandi ini sudah digunakan selama lebih dari 180 hari.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-xl flex items-start gap-3">
+                            <div class="text-emerald-400 mt-0.5"><i class="fa-solid fa-circle-check"></i></div>
+                            <div class="text-xs">
+                                <p class="font-medium text-slate-200">Aktifkan VPN Otomatis</p>
+                                <p class="text-slate-400 text-[11px] mt-0.5">Lindungi lalu lintas data saat terhubung ke Wi-Fi publik.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="runAudit()" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold py-2.5 px-4 rounded-xl text-xs transition duration-200 shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Jalankan Audit Mandiri
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-900/50 mt-12 py-6 text-center text-xs text-slate-500">
+        <p>Personal Security Dashboard &bull; Data diproses secara lokal di perangkat Anda.</p>
+    </footer>
+
+    <!-- JavaScript Interaktif Sederhana -->
+    <script>
+        // Fungsi Jam Real-time
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('live-clock').innerText = timeString + " WIB";
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Simulasi Cabut Sesi Perangkat
+        function revokSession(button) {
+            const row = button.closest('tr');
+            row.style.opacity = '0.3';
+            button.innerText = 'Dicabut';
+            button.disabled = true;
+            button.className = "text-slate-500 bg-slate-800 px-2.5 py-1 rounded cursor-not-allowed";
+            alert("Sesi perangkat berhasil dihentikan secara paksa.");
+        }
+
+        // Simulasi Audit Keamanan
+        function runAudit() {
+            alert("Memulai pemindaian mandiri: Memeriksa integritas sandi, celah port, dan cache browser...\n\nStatus: Semua sistem aman!");
+        }
+    </script>
 </body>
 </html>
