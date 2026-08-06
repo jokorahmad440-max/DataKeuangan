@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureGuard - Login 2FA & Scan</title>
+    <title>SecureGuard - Pemantau HP Sendiri</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- FontAwesome -->
@@ -11,230 +11,201 @@
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col select-none">
 
-    <!-- ================= SECTION: HALAMAN LOGIN (TAHAP 1) ================= -->
+    <!-- ================= SECTION: LOGIN ================= -->
     <div id="login-section" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl space-y-6">
             <div class="text-center space-y-2">
                 <div class="inline-block bg-emerald-500/10 text-emerald-400 p-3 rounded-2xl border border-emerald-500/20 mb-2">
-                    <i class="fa-solid fa-shield-halved text-2xl"></i>
+                    <i class="fa-solid fa-mobile-screen-button text-2xl"></i>
                 </div>
-                <h2 class="text-xl font-bold tracking-tight">Otentikasi Keamanan</h2>
-                <p class="text-xs text-slate-400">Masukkan kredensial akses Anda (Tahap 1/2)</p>
+                <h2 class="text-xl font-bold tracking-tight">Keamanan HP Saya</h2>
+                <p class="text-xs text-slate-400">Masukkan PIN untuk membuka dashboard perangkat.</p>
             </div>
 
-            <form onsubmit="handleLoginStep1(event)" class="space-y-4">
+            <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Username</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-user text-xs"></i></span>
-                        <input type="text" id="username" required placeholder="admin" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 pl-9 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
-                    </div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">PIN Keamanan</label>
+                    <input type="password" id="pin-input" maxlength="6" required placeholder="••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-sm text-slate-100 text-center tracking-widest focus:outline-none focus:border-emerald-500 transition">
                 </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Password</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-key text-xs"></i></span>
-                        <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 pl-9 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
-                    </div>
-                </div>
-
-                <div id="error-msg" class="text-rose-400 text-xs text-center hidden font-medium">Username atau Password salah!</div>
-
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition shadow-lg shadow-emerald-900/20 cursor-pointer mt-2">
-                    Lanjut Verifikasi 2FA
+                <div id="error-msg" class="text-rose-400 text-xs text-center hidden font-medium">PIN Salah! (Gunakan: 1234)</div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer">
+                    Buka Dashboard HP
                 </button>
             </form>
-            <p class="text-[10px] text-center text-slate-500">Hint Default: Username: <code class="text-slate-400">admin</code> | Password: <code class="text-slate-400">12345</code></p>
+            <p class="text-[10px] text-center text-slate-500">PIN Default: <code class="text-emerald-400 font-mono">1234</code></p>
         </div>
     </div>
-
-
-    <!-- ================= SECTION: HALAMAN VERIFIKASI 2FA & SCAN (TAHAP 2) ================= -->
-    <div id="otp-section" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl space-y-6">
-            <div class="text-center space-y-2">
-                <div class="inline-block bg-purple-500/10 text-purple-400 p-3 rounded-2xl border border-purple-500/20 mb-2">
-                    <i class="fa-solid fa-qrcode text-2xl"></i>
-                </div>
-                <h2 class="text-xl font-bold tracking-tight">Verifikasi 2FA & Scan</h2>
-                <p class="text-xs text-slate-400">Pilih metode verifikasi keamanan Anda.</p>
-            </div>
-
-            <!-- Tab Pilihan Metode -->
-            <div class="flex rounded-xl bg-slate-950 p-1 border border-slate-800 text-xs">
-                <button type="button" onclick="switchTab('otp')" id="tab-otp" class="flex-1 py-2 rounded-lg font-medium bg-purple-600 text-white transition cursor-pointer">Kode OTP</button>
-                <button type="button" onclick="switchTab('scan')" id="tab-scan" class="flex-1 py-2 rounded-lg font-medium text-slate-400 hover:text-white transition cursor-pointer">Scan QR Authenticator</button>
-            </div>
-
-            <!-- Form Input OTP Manual -->
-            <div id="form-otp-container" class="space-y-4">
-                <form onsubmit="handleLoginStep2(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Masukkan Kode OTP (888999)</label>
-                        <input type="text" id="otp-code" maxlength="6" placeholder="888999" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 tracking-widest font-mono text-center focus:outline-none focus:border-purple-500 transition">
-                    </div>
-                    <div id="otp-error-msg" class="text-rose-400 text-xs text-center hidden font-medium">Kode OTP salah!</div>
-                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer">
-                        Verifikasi Kode
-                    </button>
-                </form>
-            </div>
-
-            <!-- Simulasi Kamera Scan QR -->
-            <div id="form-scan-container" class="space-y-4 hidden text-center">
-                <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col items-center justify-center space-y-3">
-                    <div class="w-36 h-36 bg-slate-900 border-2 border-dashed border-purple-500/50 rounded-lg flex flex-col items-center justify-center text-slate-400 relative overflow-hidden">
-                        <i class="fa-solid fa-camera text-3xl mb-1 text-purple-400 animate-pulse"></i>
-                        <span class="text-[10px]">Kamera Aktif</span>
-                        <!-- Garis Scan Animasi -->
-                        <div class="absolute inset-x-0 h-0.5 bg-purple-400 shadow-[0_0_10px_#c084fc] animate-bounce"></div>
-                    </div>
-                    <p class="text-[11px] text-slate-400">Arahkan kamera HP ke QR Code Google Authenticator Anda.</p>
-                </div>
-                <button type="button" onclick="simulateScanSuccess()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer">
-                    <i class="fa-solid fa-bolt mr-1"></i> Simulasi Scan Berhasil
-                </button>
-            </div>
-
-            <button type="button" onclick="backToLogin()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2 rounded-xl text-xs transition cursor-pointer">
-                Kembali ke Login
-            </button>
-        </div>
-    </div>
-
 
     <!-- ================= SECTION: DASHBOARD UTAMA ================= -->
     <div id="dashboard-section" class="hidden flex-col min-h-screen">
-        <!-- Header / Navbar -->
         <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
             <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
                 <div class="flex items-center space-x-3">
                     <div class="bg-emerald-500/10 text-emerald-400 p-2.5 rounded-xl border border-emerald-500/20">
-                        <i class="fa-solid fa-shield-halved text-xl"></i>
+                        <i class="fa-solid fa-mobile-screen text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg font-bold tracking-wide">SecureGuard <span class="text-emerald-400 text-xs uppercase px-2 py-0.5 bg-emerald-950 border border-emerald-800 rounded-full ml-1">Pribadi</span></h1>
-                        <p class="text-xs text-slate-400">Pusat Kontrol Privasi & Keamanan Digital</p>
+                        <h1 class="text-lg font-bold tracking-wide">Info HP <span class="text-emerald-400 text-xs uppercase px-2 py-0.5 bg-emerald-950 border border-emerald-800 rounded-full ml-1">Pribadi</span></h1>
+                        <p class="text-xs text-slate-400">Monitoring Sensor & Sistem Perangkat Ini</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span id="live-clock" class="text-xs font-mono bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300"></span>
-                    <button onclick="handleLogout()" class="bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer">
-                        <i class="fa-solid fa-right-from-bracket mr-1"></i> Keluar
-                    </button>
-                </div>
+                <button onclick="handleLogout()" class="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer">
+                    <i class="fa-solid fa-lock mr-1">Tutup</i>
+                </button>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full space-y-8">
-            <section class="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
-                <div class="space-y-2 text-center md:text-left">
-                    <span class="text-emerald-400 text-xs font-semibold tracking-wider uppercase bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">Status Perlindungan</span>
-                    <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Postur Keamanan Anda Baik</h2>
-                    <p class="text-slate-400 text-sm max-w-xl">Semua parameter enkripsi & verifikasi biometrik/scan aktif.</p>
-                </div>
-                <div class="flex items-center gap-4 bg-slate-950/60 border border-slate-800 p-4 rounded-2xl">
-                    <div class="text-3xl font-black text-emerald-400 font-mono">98%</div>
-                    <div class="text-xs space-y-1">
-                        <p class="text-slate-300 font-medium">Skor Keamanan</p>
-                        <p class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> 2FA Scan Terhubung</p>
+        <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+            
+            <!-- Grid Informasi Real-Time HP Anda -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- Info 1: Jenis Perangkat -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center space-x-4">
+                    <div class="bg-blue-500/10 text-blue-400 p-3 rounded-xl border border-blue-500/20">
+                        <i class="fa-solid fa-microchip text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400">Perangkat / OS</p>
+                        <h3 id="device-info" class="text-xs font-bold text-slate-100 mt-0.5">Memuat...</h3>
                     </div>
                 </div>
-            </section>
+
+                <!-- Info 2: Baterai HP -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center space-x-4">
+                    <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-xl border border-emerald-500/20">
+                        <i class="fa-solid fa-battery-half text-xl" id="battery-icon"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400">Kondisi Baterai</p>
+                        <h3 id="battery-info" class="text-xs font-bold text-slate-100 mt-0.5">Memuat...</h3>
+                    </div>
+                </div>
+
+                <!-- Info 3: Status Koneksi Internet -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center space-x-4">
+                    <div class="bg-purple-500/10 text-purple-400 p-3 rounded-xl border border-purple-500/20">
+                        <i class="fa-solid fa-wifi text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400">Jaringan Internet</p>
+                        <h3 id="network-info" class="text-xs font-bold text-slate-100 mt-0.5">Online (Terhubung)</h3>
+                    </div>
+                </div>
+
+                <!-- Info 4: Resolusi Layar HP -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center space-x-4">
+                    <div class="bg-cyan-500/10 text-cyan-400 p-3 rounded-xl border border-cyan-500/20">
+                        <i class="fa-solid fa-expand text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400">Resolusi Layar</p>
+                        <h3 id="screen-info" class="text-xs font-bold text-slate-100 mt-0.5">Memuat...</h3>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Panel Tambahan: Cek Keamanan Mandiri -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <h3 class="font-bold text-sm text-slate-200"><i class="fa-solid fa-shield-halved text-emerald-400 mr-2"></i>Panduan Cek Cepat Keamanan HP Anda</h3>
+                <ul class="text-xs text-slate-400 space-y-2 list-disc list-inside">
+                    <li>Pastikan kunci layar HP Anda menggunakan Sandi/Biometrik (Sidik Jari/Wajah).</li>
+                    <li>Periksa berkala menu <strong class="text-slate-200">Pengaturan > Google > Perangkat & Berbagi</strong> untuk memastikan tidak ada perangkat asing yang menaut ke akun Anda.</li>
+                    <li>Hindari menginstal aplikasi di luar Play Store / App Store resmi.</li>
+                </ul>
+            </div>
+
         </main>
 
         <footer class="border-t border-slate-800/80 bg-slate-900/50 mt-12 py-6 text-center text-xs text-slate-500">
-            <p>Personal Security Dashboard &bull; Sesi Terproteksi</p>
+            <p>Monitor Hardware &bull; Berjalan Lokal di HP Anda</p>
         </footer>
     </div>
 
-
-    <!-- ================= SCRIPT LOGIKA ================= -->
+    <!-- ================= SCRIPT PENDETEKSI HP ================= -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('secureguard_logged') === 'true') {
+            if (localStorage.getItem('myphone_logged') === 'true') {
                 showDashboard();
             }
+            loadPhoneSpecs();
         });
 
-        function handleLoginStep1(e) {
+        function handleLogin(e) {
             e.preventDefault();
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            if (user === 'admin' && pass === '12345') {
-                document.getElementById('error-msg').classList.add('hidden');
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('otp-section').classList.remove('hidden');
+            const pin = document.getElementById('pin-input').value;
+            if (pin === '1234') {
+                localStorage.setItem('myphone_logged', 'true');
+                showDashboard();
             } else {
                 document.getElementById('error-msg').classList.remove('hidden');
             }
         }
 
-        // Ganti Tab antara OTP Manual dan Scan QR
-        function switchTab(mode) {
-            const tabOtp = document.getElementById('tab-otp');
-            const tabScan = document.getElementById('tab-scan');
-            const formOtp = document.getElementById('form-otp-container');
-            const formScan = document.getElementById('form-scan-container');
-
-            if (mode === 'otp') {
-                tabOtp.className = "flex-1 py-2 rounded-lg font-medium bg-purple-600 text-white transition cursor-pointer";
-                tabScan.className = "flex-1 py-2 rounded-lg font-medium text-slate-400 hover:text-white transition cursor-pointer";
-                formOtp.classList.remove('hidden');
-                formScan.classList.add('hidden');
-            } else {
-                tabScan.className = "flex-1 py-2 rounded-lg font-medium bg-purple-600 text-white transition cursor-pointer";
-                tabOtp.className = "flex-1 py-2 rounded-lg font-medium text-slate-400 hover:text-white transition cursor-pointer";
-                formScan.classList.remove('hidden');
-                formOtp.classList.add('hidden');
-            }
-        }
-
-        function backToLogin() {
-            document.getElementById('otp-section').classList.add('hidden');
-            document.getElementById('login-section').classList.remove('hidden');
-        }
-
-        function handleLoginStep2(e) {
-            e.preventDefault();
-            if (document.getElementById('otp-code').value === '888999') {
-                grantAccess();
-            } else {
-                document.getElementById('otp-error-msg').classList.remove('hidden');
-            }
-        }
-
-        function simulateScanSuccess() {
-            alert("QR Code Berhasil Dipindai dan Divalidasi!");
-            grantAccess();
-        }
-
-        function grantAccess() {
-            localStorage.setItem('secureguard_logged', 'true');
-            document.getElementById('otp-section').classList.add('hidden');
-            showDashboard();
-        }
-
         function showDashboard() {
             document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('otp-section').classList.add('hidden');
             document.getElementById('dashboard-section').classList.remove('hidden');
             document.getElementById('dashboard-section').classList.add('flex');
         }
 
         function handleLogout() {
-            localStorage.removeItem('secureguard_logged');
+            localStorage.removeItem('myphone_logged');
             location.reload();
         }
 
-        // Pengaman & Jam
+        // Fungsi Otomatis Membaca Spesifikasi & Status HP
+        async function loadPhoneSpecs() {
+            // 1. Deteksi Browser & OS (Jenis HP)
+            const ua = navigator.userAgent;
+            let os = "Perangkat Lain";
+            if (/android/i.test(ua)) os = "Android Phone";
+            else if (/iphone|ipad|ipod/i.test(ua)) os = "iPhone / iOS";
+            else if (/windows/i.test(ua)) os = "Windows PC";
+            
+            document.getElementById('device-info').innerText = os;
+
+            // 2. Deteksi Resolusi Layar HP
+            document.getElementById('screen-info').innerText = window.innerWidth + " x " + window.innerHeight + " px";
+
+            // 3. Deteksi Status Baterai HP (Jika didukung browser HP)
+            if ('getBattery' in navigator) {
+                try {
+                    const battery = await navigator.getBattery();
+                    updateBatteryStatus(battery);
+                    battery.addEventListener('levelchange', () => updateBatteryStatus(battery));
+                    battery.addEventListener('chargingchange', () => updateBatteryStatus(battery));
+                } catch (err) {
+                    document.getElementById('battery-info').innerText = "Tidak tersedia";
+                }
+            } else {
+                document.getElementById('battery-info').innerText = "Tidak didukung browser";
+            }
+
+            // 4. Deteksi Status Koneksi Internet
+            const netStatus = document.getElementById('network-info');
+            function updateNetStatus() {
+                if (navigator.onLine) {
+                    netStatus.innerText = "Terhubung (Online)";
+                    netStatus.className = "text-xs font-bold text-emerald-400 mt-0.5";
+                } else {
+                    netStatus.innerText = "Terputus (Offline)";
+                    netStatus.className = "text-xs font-bold text-rose-400 mt-0.5";
+                }
+            }
+            window.addEventListener('online', updateNetStatus);
+            window.addEventListener('offline', updateNetStatus);
+            updateNetStatus();
+        }
+
+        function updateBatteryStatus(battery) {
+            const level = Math.round(battery.level * 100);
+            const charging = battery.charging ? " (Mengisi)" : "";
+            document.getElementById('battery-info').innerText = level + "%" + charging;
+        }
+
+        // Pengaman dasar
         document.addEventListener('contextmenu', e => e.preventDefault());
-        setInterval(() => {
-            const clock = document.getElementById('live-clock');
-            if(clock) clock.innerText = new Date().toLocaleTimeString('id-ID') + " WIB";
-        }, 1000);
     </script>
 </body>
 </html>
