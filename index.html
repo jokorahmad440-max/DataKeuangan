@@ -27,7 +27,7 @@
                     <label class="block text-xs font-medium text-slate-300 mb-1.5">Username</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-user text-xs"></i></span>
-                        <input type="text" id="username" required placeholder="admin / user" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 pl-9 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
+                        <input type="text" id="username" required placeholder="admin" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 pl-9 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition">
                     </div>
                 </div>
 
@@ -50,7 +50,7 @@
     </div>
 
 
-    <!-- ================= SECTION: DASHBOARD UTAMA (Disembunyikan sebelum login) ================= -->
+    <!-- ================= SECTION: DASHBOARD UTAMA ================= -->
     <div id="dashboard-section" class="hidden flex-col min-h-screen">
         <!-- Header / Navbar -->
         <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
@@ -122,26 +122,42 @@
     </div>
 
 
-    <!-- ================= SCRIPT PENGAMAN & INTERAKSI ================= -->
+    <!-- ================= SCRIPT PENGAMAN & PENYIMPAN SESI ================= -->
     <script>
-        // 1. Logika Login Sederhana
+        // Cek Sesi Saat Halaman Dimuat (Agar saat direfresh tidak logout)
+        window.addEventListener('DOMContentLoaded', () => {
+            const isLogged = localStorage.getItem('secureguard_logged');
+            if (isLogged === 'true') {
+                showDashboard();
+            }
+        });
+
+        // Logika Login
         function handleLogin(e) {
             e.preventDefault();
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
             const errorMsg = document.getElementById('error-msg');
 
-            // Kredensial hardcode contoh (bisa disesuaikan)
             if (user === 'admin' && pass === '12345') {
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('dashboard-section').classList.remove('hidden');
-                document.getElementById('dashboard-section').classList.add('flex');
+                // Simpan status login ke localStorage
+                localStorage.setItem('secureguard_logged', 'true');
+                showDashboard();
             } else {
                 errorMsg.classList.remove('hidden');
             }
         }
 
+        // Fungsi Tampilkan Dashboard
+        function showDashboard() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            document.getElementById('dashboard-section').classList.add('flex');
+        }
+
+        // Logika Logout (Menghapus status sesi)
         function handleLogout() {
+            localStorage.removeItem('secureguard_logged');
             document.getElementById('dashboard-section').classList.remove('flex');
             document.getElementById('dashboard-section').classList.add('hidden');
             document.getElementById('login-section').classList.remove('hidden');
@@ -149,36 +165,27 @@
             document.getElementById('error-msg').classList.add('hidden');
         }
 
-        // 2. Skrip Mematikan Tombol F12 & Inspeksi Elemen
-        // Matikan Klik Kanan
+        // Skrip Pengaman F12 & Inspeksi Elemen
         document.addEventListener('contextmenu', function (e) {
             e.preventDefault();
-            alert("Aksi klik kanan dinonaktifkan demi keamanan halaman.");
         });
 
-        // Matikan Pintasan Keyboard (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+S)
         document.addEventListener('keydown', function (e) {
-            // Tombol F12
             if (e.key === 'F12' || e.keyCode === 123) {
                 e.preventDefault();
-                alert("Akses Developer Tools (F12) diblokir.");
                 return false;
             }
-
-            // Kombinasi Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C (DevTools)
             if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
                 e.preventDefault();
                 return false;
             }
-
-            // Kombinasi Ctrl+U (View Source) atau Ctrl+S (Save Page)
             if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's')) {
                 e.preventDefault();
                 return false;
             }
         });
 
-        // Jam Real-time Dashboard
+        // Jam Real-time
         function updateClock() {
             const now = new Date();
             const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
