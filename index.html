@@ -3,96 +3,466 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Sedang Dalam Pemeliharaan</title>
+    <title>Mini Block Blast Game</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f172a, #1e293b);
+            background: #0f172a;
             color: #f8fafc;
-            height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            text-align: center;
+            justify-content: center;
+            min-height: 100vh;
             padding: 20px;
         }
 
-        .container {
-            max-width: 600px;
-            padding: 40px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-            animation: bounce 2s infinite;
-        }
-
         h1 {
-            font-size: 28px;
+            font-size: 24px;
+            margin-bottom: 5px;
+            color: #38bdf8;
+        }
+
+        .score-board {
+            font-size: 18px;
             margin-bottom: 15px;
-            color: #f1f5f9;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        p {
-            font-size: 16px;
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 20px;
+        }
+
+        /* Papan Grid Utama (8x8) */
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(8, 35px);
+            grid-template-rows: repeat(8, 35px);
+            gap: 3px;
+            background: #0f172a;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .cell {
+            width: 35px;
+            height: 35px;
+            background: #334155;
+            border-radius: 4px;
+            transition: background 0.1s;
+        }
+
+        .cell.filled {
+            background: #38bdf8;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        .cell.highlight {
+            background: rgba(56, 189, 248, 0.4);
+            border: 2px dashed #38bdf8;
+        }
+
+        /* Area Pilihan Blok */
+        .spawn-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            min-height: 90px;
+            align-items: center;
+            background: #0f172a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .block-wrapper {
+            cursor: grab;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .block-wrapper:active {
+            cursor: grabbing;
+        }
+
+        .mini-grid {
+            display: grid;
+            gap: 2px;
+        }
+
+        .mini-cell {
+            width: 20px;
+            height: 20px;
+            background: transparent;
+            border-radius: 3px;
+        }
+
+        .mini-cell.filled {
+            background: #f43f5e;
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.3);
+        }
+
+        .instructions {
+            font-size: 13px;
             color: #94a3b8;
-            line-height: 1.6;
-            margin-bottom: 25px;
+            text-align: center;
+            max-width: 300px;
         }
 
-        .loader {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid #38bdf8;
-            border-radius: 50%;
-            margin: 0 auto 20px auto;
-            animation: spin 1s linear infinite;
+        #game-over {
+            display: none;
+            position: absolute;
+            background: rgba(15, 23, 42, 0.95);
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #f43f5e;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
-        .footer {
-            font-size: 14px;
-            color: #64748b;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding-top: 20px;
+        #game-over h2 {
+            color: #f43f5e;
+            margin-bottom: 10px;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        #game-over button {
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
         }
 
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+        #game-over button:hover {
+            background: #0ea5e9;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="icon">🛠️</div>
-        <div class="loader"></div>
-        <h1>Website Sedang Dalam Pemeliharaan</h1>
-        <p>Kami sedang melakukan beberapa perbaikan dan peningkatan untuk memberikan pengalaman yang lebih baik. Mohon kunjungi kembali beberapa saat lagi
-            Mohon maaf atas ketidak nyamanan nya ya bosku.</p>
-        <div class="footer">
-            &copy; 2026 Free fire. All rights reserved.
-        </div>
+    <h1>BLOCK BLAST MINI</h1>
+    <div class="score-board">Skor: <span id="score">0</span></div>
+
+    <div class="game-container">
+        <!-- Papan Permainan -->
+        <div id="grid"></div>
+
+        <!-- Pilihan Blok yang Bisa Dipilih -->
+        <div class="spawn-container" id="spawn-container"></div>
+
+        <p class="instructions">Klik dan tahan (atau ketuk) salah satu bentuk balok di bawah, lalu arahkan ke papan untuk meletakkannya.</p>
     </div>
+
+    <!-- Kotak Game Over -->
+    <div id="game-over">
+        <h2>Game Over!</h2>
+        <p>Tidak ada tempat lagi untuk balok.</p>
+        <p>Skor Akhir: <span id="final-score">0</span></p>
+        <button onclick="resetGame()">Main Lagi</button>
+    </div>
+
+    <script>
+        const GRID_SIZE = 8;
+        let gridData = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+        let score = 0;
+        let selectedBlock = null;
+
+        // Bentuk-bentuk balok (Matriks 2D)
+        const SHAPES = [
+            [[1]], // Kotak 1x1
+            [[1, 1]], // Garis 2 horizontal
+            [[1], [1]], // Garis 2 vertikal
+            [[1, 1], [1, 1]], // Kotak 2x2
+            [[1, 1, 1]], // Garis 3 horizontal
+            [[1], [1], [1]], // Garis 3 vertikal
+            [[1, 1], [1, 0]] // Bentuk L kecil
+        ];
+
+        let currentSpawnedBlocks = [null, null, null];
+
+        const gridEl = document.getElementById('grid');
+        const spawnContainerEl = document.getElementById('spawn-container');
+        const scoreEl = document.getElementById('score');
+        const gameOverEl = document.getElementById('game-over');
+        const finalScoreEl = document.getElementById('final-score');
+
+        // Inisialisasi Papan Grid
+        function initGrid() {
+            gridEl.innerHTML = '';
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    
+                    // Event listener untuk drag/sentuh masuk ke grid
+                    cell.addEventListener('mouseenter', () => highlightGrid(r, c, true));
+                    cell.addEventListener('mouseleave', () => highlightGrid(r, c, false));
+                    cell.addEventListener('click', () => placeBlockOnGrid(r, c));
+
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        // Render ulang tampilan papan berdasarkan data array
+        function renderGrid() {
+            const cells = gridEl.children;
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const index = r * GRID_SIZE + c;
+                    if (gridData[r][c] === 1) {
+                        cells[index].classList.add('filled');
+                    } else {
+                        cells[index].classList.remove('filled');
+                    }
+                }
+            }
+        }
+
+        // Munculkan 3 pilihan blok baru
+        function spawnBlocks() {
+            currentSpawnedBlocks = [];
+            spawnContainerEl.innerHTML = '';
+
+            for (let i = 0; i < 3; i++) {
+                const randomShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+                currentSpawnedBlocks.push(randomShape);
+
+                const wrapper = document.createElement('div');
+                wrapper.classList.add('block-wrapper');
+                wrapper.dataset.index = i;
+
+                const miniGrid = document.createElement('div');
+                miniGrid.classList.add('mini-grid');
+                const rows = randomShape.length;
+                const cols = randomShape[0].length;
+                miniGrid.style.gridTemplateColumns = `repeat(${cols}, 20px)`;
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const miniCell = document.createElement('div');
+                        miniCell.classList.add('mini-cell');
+                        if (randomShape[r][c] === 1) {
+                            miniCell.classList.add('filled');
+                        }
+                        miniGrid.appendChild(miniCell);
+                    }
+                }
+
+                wrapper.appendChild(miniGrid);
+                wrapper.addEventListener('click', () => {
+                    // Pilih blok yang diklik
+                    document.querySelectorAll('.block-wrapper').forEach(w => w.style.borderColor = 'rgba(255,255,255,0.1)');
+                    wrapper.style.borderColor = '#38bdf8';
+                    selectedBlock = { shape: randomShape, index: i };
+                });
+
+                spawnContainerEl.appendChild(wrapper);
+            }
+
+            // Cek apakah ada langkah tersisa
+            checkGameOver();
+        }
+
+        // Efek bayangan saat kursor berada di atas grid
+        function highlightGrid(startR, startC, isEnter) {
+            document.querySelectorAll('.cell').forEach(c => c.classList.remove('highlight'));
+            if (!selectedBlock || !isEnter) return;
+
+            const shape = selectedBlock.shape;
+            let canPlace = true;
+
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[0].length; c++) {
+                    if (shape[r][c] === 1) {
+                        let targetR = startR + r;
+                        let targetC = startC + c;
+                        if (targetR >= GRID_SIZE || targetC >= GRID_SIZE || gridData[targetR][targetC] === 1) {
+                            canPlace = false;
+                        }
+                    }
+                }
+            }
+
+            if (canPlace) {
+                for (let r = 0; r < shape.length; r++) {
+                    for (let c = 0; c < shape[0].length; c++) {
+                        if (shape[r][c] === 1) {
+                            let targetR = startR + r;
+                            let targetC = startC + c;
+                            let index = targetR * GRID_SIZE + targetC;
+                            gridEl.children[index].classList.add('highlight');
+                        }
+                    }
+                }
+            }
+        }
+
+        // Letakkan balok ke grid utama
+        function placeBlockOnGrid(startR, startC) {
+            if (!selectedBlock) return;
+
+            const shape = selectedBlock.shape;
+            let canPlace = true;
+
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[0].length; c++) {
+                    if (shape[r][c] === 1) {
+                        let targetR = startR + r;
+                        let targetC = startC + c;
+                        if (targetR >= GRID_SIZE || targetC >= GRID_SIZE || gridData[targetR][targetC] === 1) {
+                            canPlace = false;
+                        }
+                    }
+                }
+            }
+
+            if (canPlace) {
+                // Masukkan data balok ke grid
+                for (let r = 0; r < shape.length; r++) {
+                    for (let c = 0; c < shape[0].length; c++) {
+                        if (shape[r][c] === 1) {
+                            gridData[startR + r][startC + c] = 1;
+                        }
+                    }
+                }
+
+                score += shape.flat().reduce((a, b) => a + b, 10);
+                scoreEl.innerText = score;
+
+                // Hapus blok dari pilihan
+                currentSpawnedBlocks[selectedBlock.index] = null;
+                
+                // Hapus elemen HTML pilihan yang sudah dipakai
+                const wrappers = spawnContainerEl.children;
+                if (wrappers[selectedBlock.index]) {
+                    wrappers[selectedBlock.index].innerHTML = '';
+                    wrappers[selectedBlock.index].style.opacity = '0.2';
+                    wrappers[selectedBlock.index].style.pointerEvents = 'none';
+                }
+
+                selectedBlock = null;
+                renderGrid();
+                checkClearLines();
+
+                // Jika 3 pilihan habis, buat lagi yang baru
+                if (currentSpawnedBlocks.every(b => b === null)) {
+                    spawnBlocks();
+                } else {
+                    checkGameOver();
+                }
+            }
+        }
+
+        // Cek dan hapus baris/kolom yang penuh
+        function checkClearLines() {
+            let rowsToClear = [];
+            let colsToClear = [];
+
+            // Cek baris
+            for (let r = 0; r < GRID_SIZE; r++) {
+                if (gridData[r].every(cell => cell === 1)) {
+                    rowsToClear.push(r);
+                }
+            }
+
+            // Cek kolom
+            for (let c = 0; c < GRID_SIZE; c++) {
+                let colFull = true;
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    if (gridData[r][c] === 0) colFull = false;
+                }
+                if (colFull) colsToClear.push(c);
+            }
+
+            // Eksekusi pembersihan
+            if (rowsToClear.length > 0 || colsToClear.length > 0) {
+                rowsToClear.forEach(r => {
+                    for (let c = 0; c < GRID_SIZE; c++) gridData[r][c] = 0;
+                });
+                colsToClear.forEach(c => {
+                    for (let r = 0; r < GRID_SIZE; r++) gridData[r][c] = 0;
+                });
+
+                score += (rowsToClear.length + colsToClear.length) * 50;
+                scoreEl.innerText = score;
+                renderGrid();
+            }
+        }
+
+        // Cek kondisi Game Over (apakah sisa blok masih bisa dimasukkan)
+        function checkGameOver() {
+            let activeBlocks = currentSpawnedBlocks.filter(b => b !== null);
+            if (activeBlocks.length === 0) return;
+
+            let possibleMoveExists = false;
+
+            for (let block of activeBlocks) {
+                let shape = block;
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    for (let c = 0; c < GRID_SIZE; c++) {
+                        // Cek apakah bentuk ini muat di posisi (r, c)
+                        let canFit = true;
+                        for (let br = 0; br < shape.length; br++) {
+                            for (let bc = 0; bc < shape[0].length; bc++) {
+                                if (shape[br][bc] === 1) {
+                                    let tr = r + br;
+                                    let tc = c + bc;
+                                    if (tr >= GRID_SIZE || tc >= GRID_SIZE || gridData[tr][tc] === 1) {
+                                        canFit = false;
+                                    }
+                                }
+                            }
+                        }
+                        if (canFit) possibleMoveExists = true;
+                    }
+                }
+            }
+
+            if (!possibleMoveExists) {
+                finalScoreEl.innerText = score;
+                gameOverEl.style.display = 'block';
+            }
+        }
+
+        // Reset Game
+        function resetGame() {
+            gridData = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+            score = 0;
+            scoreEl.innerText = score;
+            gameOverEl.style.display = 'none';
+            renderGrid();
+            spawnBlocks();
+        }
+
+        // Jalankan game pertama kali
+        initGrid();
+        spawnBlocks();
+    </script>
 
 </body>
 </html>
